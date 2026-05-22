@@ -3,7 +3,12 @@
  */
 
 import { kycRepository } from "@/core/data/repositories";
-import type { KycDocument } from "@/lib/types";
+import type {
+  KycDocument,
+  KycIdentityPendingResponse,
+  KycIdentityReview,
+  ReviewKycIdentityInput,
+} from "@/lib/types";
 
 class KycService {
   listPending(level?: number): Promise<KycDocument[]> {
@@ -16,6 +21,24 @@ class KycService {
 
   reject(documentId: string, reason: string): Promise<KycDocument> {
     return kycRepository.reject(documentId, reason.trim());
+  }
+
+  listPendingIdentity(
+    page?: number,
+    perPage?: number,
+    status?: string,
+  ): Promise<KycIdentityPendingResponse> {
+    return kycRepository.listPendingIdentity(page, perPage, status);
+  }
+
+  reviewIdentity(
+    userId: string,
+    input: ReviewKycIdentityInput,
+  ): Promise<KycIdentityReview> {
+    return kycRepository.reviewIdentity(userId, {
+      ...input,
+      reason: input.reason?.trim() || undefined,
+    });
   }
 }
 

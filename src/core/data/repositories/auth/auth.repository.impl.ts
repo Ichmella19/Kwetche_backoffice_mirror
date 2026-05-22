@@ -1,6 +1,11 @@
 import { httpService } from "@/core/data/http.service";
 import type { IAuthRepository } from "@/core/domain/repositories";
-import type { DeviceInfo, LoginCredentials, LoginResult, User } from "@/lib/types";
+import type {
+  DeviceInfo,
+  LoginCredentials,
+  LoginResult,
+  User,
+} from "@/lib/types";
 
 export class AuthRepository implements IAuthRepository {
   async login(
@@ -8,7 +13,7 @@ export class AuthRepository implements IAuthRepository {
     device: DeviceInfo,
   ): Promise<LoginResult> {
     const result = await httpService.post<LoginResult>(
-      "/auth/login",
+      "/admin/auth/login",
       { ...credentials, ...device },
       { anonymous: true },
     );
@@ -42,6 +47,13 @@ export class AuthRepository implements IAuthRepository {
     new_password: string;
   }): Promise<void> {
     await httpService.post("/auth/reset_password", input, { anonymous: true });
+  }
+
+  async changePassword(input: {
+    current_password: string;
+    new_password: string;
+  }): Promise<void> {
+    await httpService.post("/auth/change_password", input);
   }
 
   me(): Promise<User> {

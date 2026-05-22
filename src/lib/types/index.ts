@@ -6,6 +6,17 @@
 export type { ApiResponse, Paginated } from "./api";
 export type { DeviceInfo, LoginCredentials, LoginResult } from "./auth";
 export type { DashboardStats } from "./dashboard";
-export type { KycDocument } from "./kyc";
+export type {
+  KycDocument,
+  KycIdentityPendingResponse,
+  KycIdentityReview,
+  ReviewKycIdentityInput,
+} from "./kyc";
 export type { AppSetting } from "./settings";
-export type { User } from "./user";
+export type { RevokeOtherSessionsResult, UserSession } from "./sessions";
+export type {
+  AdminCreateUserInput,
+  AdminUpdateUserInput,
+  User,
+  UserListResponse,
+} from "./user";

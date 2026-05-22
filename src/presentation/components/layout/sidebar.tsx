@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   SlidersHorizontal,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/presentation/contexts/auth-context";
@@ -24,8 +25,24 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: "Tableau de bord", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
-  { label: "Vérification KYC", href: ROUTES.KYC, icon: ShieldCheck, grant: Grant.KYC_REVIEW },
-  { label: "Paramètres", href: ROUTES.SETTINGS, icon: SlidersHorizontal, grant: Grant.SETTINGS_WRITE },
+  {
+    label: "Utilisateurs",
+    href: ROUTES.USERS,
+    icon: Users,
+    grant: Grant.USER_READ,
+  },
+  {
+    label: "Vérification KYC",
+    href: ROUTES.KYC,
+    icon: ShieldCheck,
+    grant: Grant.KYC_REVIEW,
+  },
+  {
+    label: "Paramètres",
+    href: ROUTES.SETTINGS,
+    icon: SlidersHorizontal,
+    grant: Grant.SETTINGS_WRITE,
+  },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -44,7 +61,8 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
           return (
             <Link

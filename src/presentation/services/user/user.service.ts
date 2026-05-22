@@ -3,7 +3,14 @@
  */
 
 import { userRepository } from "@/core/data/repositories";
-import type { User } from "@/lib/types";
+import type {
+  AdminCreateUserInput,
+  AdminUpdateUserInput,
+  RevokeOtherSessionsResult,
+  User,
+  UserListResponse,
+  UserSession,
+} from "@/lib/types";
 
 class UserService {
   me(): Promise<User> {
@@ -12,6 +19,64 @@ class UserService {
 
   updateProfile(data: Partial<User>): Promise<User> {
     return userRepository.updateProfile(data);
+  }
+
+  listUsers(params?: {
+    page?: number;
+    perPage?: number;
+    search?: string;
+    includeDeleted?: boolean;
+  }): Promise<UserListResponse> {
+    return userRepository.listUsers(params);
+  }
+
+  createUser(data: AdminCreateUserInput): Promise<User> {
+    return userRepository.createUser({
+      ...data,
+      email: data.email?.trim() || null,
+    });
+  }
+
+  getUser(userId: string): Promise<User> {
+    return userRepository.getUser(userId);
+  }
+
+  updateUser(userId: string, data: AdminUpdateUserInput): Promise<User> {
+    return userRepository.updateUser(userId, {
+      ...data,
+      email: data.email?.trim() || null,
+    });
+  }
+
+  setUserPassword(
+    userId: string,
+    input: { new_password: string; revoke_sessions?: boolean },
+  ): Promise<User> {
+    return userRepository.setUserPassword(userId, input);
+  }
+
+  listUserSessions(userId: string): Promise<UserSession[]> {
+    return userRepository.listUserSessions(userId);
+  }
+
+  revokeUserSession(userId: string, sessionId: string): Promise<void> {
+    return userRepository.revokeUserSession(userId, sessionId);
+  }
+
+  revokeUserSessions(userId: string): Promise<RevokeOtherSessionsResult> {
+    return userRepository.revokeUserSessions(userId);
+  }
+
+  disableUser(userId: string, reason?: string): Promise<User> {
+    return userRepository.disableUser(userId, reason?.trim() || undefined);
+  }
+
+  enableUser(userId: string, reason?: string): Promise<User> {
+    return userRepository.enableUser(userId, reason?.trim() || undefined);
+  }
+
+  deleteUser(userId: string, reason: string): Promise<User> {
+    return userRepository.deleteUser(userId, reason.trim());
   }
 }
 

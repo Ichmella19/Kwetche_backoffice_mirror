@@ -12,7 +12,11 @@ export enum UserRole {
 }
 
 /** Rôles habilités à entrer dans le back-office. */
-export const ADMIN_ROLES: UserRole[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
+export const ADMIN_ROLES: UserRole[] = [
+  UserRole.ASSISTANT,
+  UserRole.ADMIN,
+  UserRole.SUPER_ADMIN,
+];
 
 /** Niveaux de vérification KYC (0 à 3). */
 export enum KycLevel {

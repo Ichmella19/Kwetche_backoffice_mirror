@@ -17,6 +17,11 @@ export interface User {
   grants: string[];
   kyc_level: number;
   kyc_updated_at: string | null;
+  npi_number: string | null;
+  cip_photo: string | null;
+  cip_validation: string;
+  selfie_photo: string | null;
+  selfie_validation: string;
   cip_verified_at: string | null;
   is_verified: boolean;
   is_desactivate: boolean;
@@ -24,4 +29,33 @@ export interface User {
   last_login_at: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+export interface UserListResponse {
+  items: User[];
+  total: number;
+  page: number;
+  pages: number;
+}
+
+export interface AdminCreateUserInput {
+  first_name: string;
+  last_name: string;
+  phone: string;
+  country_code: string;
+  email?: string | null;
+  password?: string;
+  role: string;
+  grants: string[];
+  is_verified: boolean;
+}
+
+export interface AdminUpdateUserInput {
+  first_name?: string;
+  last_name?: string;
+  email?: string | null;
+  role?: string;
+  grants?: string[];
+  is_verified?: boolean;
+  is_desactivate?: boolean;
 }

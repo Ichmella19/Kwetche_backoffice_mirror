@@ -55,6 +55,13 @@ class AuthService {
     return authRepository.resetPassword(input);
   }
 
+  changePassword(input: {
+    current_password: string;
+    new_password: string;
+  }): Promise<void> {
+    return authRepository.changePassword(input);
+  }
+
   /** Recharge le profil depuis l'API et met à jour le cache local. */
   async refreshProfile(): Promise<User> {
     const user = await authRepository.me();
