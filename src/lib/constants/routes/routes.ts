@@ -5,6 +5,7 @@ export const ROUTES = {
 
   DASHBOARD: "/dashboard",
   KYC: "/kyc",
+  KYC_DOCUMENTS: "/kyc/documents",
   USERS: "/users",
   SETTINGS: "/settings",
   PROFILE: "/profile",

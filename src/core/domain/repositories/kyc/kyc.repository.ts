@@ -2,13 +2,19 @@ import type {
   KycDocument,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "@/lib/types";
 
 export interface IKycRepository {
-  listPending(level?: number): Promise<KycDocument[]>;
-  approve(documentId: string): Promise<KycDocument>;
-  reject(documentId: string, reason: string): Promise<KycDocument>;
+  // ── Documents niveaux 2/3 ──────────────────────────
+  listPendingDocuments(targetLevel?: number): Promise<KycDocument[]>;
+  reviewDocument(
+    documentId: string,
+    input: ReviewKycDocumentInput,
+  ): Promise<KycDocument>;
+
+  // ── Identité niveau 1 ──────────────────────────────
   listPendingIdentity(
     page?: number,
     perPage?: number,

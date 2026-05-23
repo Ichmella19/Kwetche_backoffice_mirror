@@ -1,5 +1,5 @@
 /**
- * Service KYC : file des documents à vérifier + décisions.
+ * Service KYC : file des documents/dossiers à vérifier + décisions agent.
  */
 
 import { kycRepository } from "@/core/data/repositories";
@@ -7,22 +7,27 @@ import type {
   KycDocument,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "@/lib/types";
 
 class KycService {
-  listPending(level?: number): Promise<KycDocument[]> {
-    return kycRepository.listPending(level);
+  // ── Documents niveaux 2/3 ──────────────────────────
+  listPendingDocuments(targetLevel?: number): Promise<KycDocument[]> {
+    return kycRepository.listPendingDocuments(targetLevel);
   }
 
-  approve(documentId: string): Promise<KycDocument> {
-    return kycRepository.approve(documentId);
+  reviewDocument(
+    documentId: string,
+    input: ReviewKycDocumentInput,
+  ): Promise<KycDocument> {
+    return kycRepository.reviewDocument(documentId, {
+      ...input,
+      reason: input.reason?.trim() || undefined,
+    });
   }
 
-  reject(documentId: string, reason: string): Promise<KycDocument> {
-    return kycRepository.reject(documentId, reason.trim());
-  }
-
+  // ── Identité niveau 1 ──────────────────────────────
   listPendingIdentity(
     page?: number,
     perPage?: number,

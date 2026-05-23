@@ -1,32 +1,31 @@
 "use client";
 
-import { Check, Clock, Fingerprint, X } from "lucide-react";
+import { Ban, Check, Clock, Fingerprint, X } from "lucide-react";
 import { Card } from "@/presentation/components/ui/card";
 import { Button } from "@/presentation/components/ui/button";
 import { DocumentPreview } from "./document-preview";
 import { KycLevelBadge } from "./kyc-level-badge";
-import { KYC_DOCUMENT_LABELS } from "@/lib/constants";
+import { KycStatusBadge } from "./kyc-status-badge";
+import { kycDocumentLabel } from "@/lib/constants";
 import { formatRelativeTime } from "@/lib/utils/formatters";
 import type { KycDocument } from "@/lib/types";
 
+export type KycDocumentAction = "approve" | "decline" | "block";
+
 interface KycDocumentCardProps {
   document: KycDocument;
-  canApprove: boolean;
-  canReject: boolean;
+  canReview: boolean;
   busy?: boolean;
-  onApprove: (document: KycDocument) => void;
-  onReject: (document: KycDocument) => void;
+  onReview: (document: KycDocument, action: KycDocumentAction) => void;
 }
 
 export function KycDocumentCard({
   document,
-  canApprove,
-  canReject,
+  canReview,
   busy,
-  onApprove,
-  onReject,
+  onReview,
 }: KycDocumentCardProps) {
-  const label = KYC_DOCUMENT_LABELS[document.document_type] ?? document.document_type;
+  const label = kycDocumentLabel(document.document_type);
 
   return (
     <Card className="flex flex-col overflow-hidden">
@@ -43,7 +42,10 @@ export function KycDocumentCard({
               {formatRelativeTime(document.submitted_at)}
             </p>
           </div>
-          <KycLevelBadge level={document.target_level} />
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <KycLevelBadge level={document.target_level} />
+            <KycStatusBadge status={document.validation} />
+          </div>
         </div>
 
         <p className="flex items-center gap-1.5 text-xs text-muted">
@@ -51,13 +53,18 @@ export function KycDocumentCard({
           <span className="truncate font-mono">{document.user_id}</span>
         </p>
 
-        <div className="mt-auto flex gap-2 pt-1">
+        {document.review_reason && (
+          <p className="rounded-md bg-danger-soft px-2 py-1 text-xs text-danger">
+            Motif : {document.review_reason}
+          </p>
+        )}
+
+        <div className="mt-auto flex flex-wrap gap-2 pt-1">
           <Button
             variant="accent"
             size="sm"
-            fullWidth
-            disabled={!canApprove || busy}
-            onClick={() => onApprove(document)}
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "approve")}
           >
             <Check />
             Approuver
@@ -65,13 +72,21 @@ export function KycDocumentCard({
           <Button
             variant="outline"
             size="sm"
-            fullWidth
-            disabled={!canReject || busy}
-            onClick={() => onReject(document)}
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "decline")}
             className="text-danger hover:bg-danger-soft"
           >
             <X />
-            Rejeter
+            Refuser
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "block")}
+          >
+            <Ban />
+            Bloquer
           </Button>
         </div>
       </div>

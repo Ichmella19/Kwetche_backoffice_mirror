@@ -7,7 +7,7 @@ import type { DashboardStats } from "@/lib/types";
 
 class DashboardService {
   async getStats(): Promise<DashboardStats> {
-    const pending = await kycRepository.listPending();
+    const pending = await kycRepository.listPendingDocuments();
     return {
       pendingKyc: pending.length,
     };

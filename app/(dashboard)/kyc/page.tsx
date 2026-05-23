@@ -7,7 +7,7 @@ import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { ConfirmDialog } from "@/presentation/components/shared/confirm-dialog";
 import { Pagination } from "@/presentation/components/shared/pagination";
-import { DocumentPreview } from "@/presentation/components/kyc";
+import { DocumentPreview, KycTabs } from "@/presentation/components/kyc";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import {
@@ -229,6 +229,8 @@ export default function KycPage() {
         title="Revue identité KYC"
         description="Contrôlez les dossiers niveau 1 : NPI, photo CIP et selfie."
       />
+
+      <KycTabs />
 
       <StatusTabs
         value={status}

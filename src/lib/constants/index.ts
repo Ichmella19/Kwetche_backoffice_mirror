@@ -7,8 +7,8 @@ export { API_BASE_URL, API_TIMEOUT, APP_VERSION, FILE_BASE_URL } from "./api";
 export {
   GRANT_LABELS,
   KYC_DOCUMENT_LABELS,
+  kycDocumentLabel,
   KYC_LEVEL_LABELS,
-  KYC_STATUS_LABELS,
   ROLE_LABELS,
   SETTING_LABELS,
 } from "./labels";

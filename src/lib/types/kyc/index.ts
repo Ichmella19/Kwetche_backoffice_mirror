@@ -1,4 +1,4 @@
-export type { KycDocument } from "./kyc-document";
+export type { KycDocument, ReviewKycDocumentInput } from "./kyc-document";
 export type {
   KycIdentityPendingResponse,
   KycIdentityReview,

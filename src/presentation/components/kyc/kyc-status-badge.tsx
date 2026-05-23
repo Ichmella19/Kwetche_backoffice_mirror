@@ -1,17 +1,20 @@
 import { Badge, type BadgeProps } from "@/presentation/components/ui/badge";
-import { KYC_STATUS_LABELS } from "@/lib/constants";
-import { KycDocumentStatus } from "@/lib/enums";
+import { Validation, validationLabel } from "@/lib/enums";
 
 const VARIANT: Record<string, BadgeProps["variant"]> = {
-  [KycDocumentStatus.PENDING]: "warning",
-  [KycDocumentStatus.APPROVED]: "success",
-  [KycDocumentStatus.REJECTED]: "danger",
+  [Validation.APPROVED]: "success",
+  [Validation.APPROVED_AND_REUPLOADED]: "success",
+  [Validation.DECLINED]: "danger",
+  [Validation.BLOCKED]: "danger",
+  [Validation.EXPIRED]: "danger",
+  [Validation.UPLOADED_AND_WAITING_FOR_APPROVAL]: "warning",
+  [Validation.REUPLOADED_AND_WAITING_FOR_APPROVAL]: "warning",
+  [Validation.NOT_UPLOADED]: "neutral",
 };
 
+/** Badge de statut d'un document KYC (state-machine `Validation`). */
 export function KycStatusBadge({ status }: { status: string }) {
   return (
-    <Badge variant={VARIANT[status] ?? "neutral"}>
-      {KYC_STATUS_LABELS[status] ?? status}
-    </Badge>
+    <Badge variant={VARIANT[status] ?? "neutral"}>{validationLabel(status)}</Badge>
   );
 }

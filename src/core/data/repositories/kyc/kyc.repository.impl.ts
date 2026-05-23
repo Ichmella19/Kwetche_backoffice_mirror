@@ -4,26 +4,29 @@ import type {
   KycDocument,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "@/lib/types";
 
 export class KycRepository implements IKycRepository {
-  listPending(level?: number): Promise<KycDocument[]> {
-    return httpService.get<KycDocument[]>("/admin/kyc/pending", {
-      query: { level },
+  // ── Documents niveaux 2/3 ──────────────────────────
+  listPendingDocuments(targetLevel?: number): Promise<KycDocument[]> {
+    return httpService.get<KycDocument[]>("/admin/kyc/documents/pending", {
+      query: { target_level: targetLevel },
     });
   }
 
-  approve(documentId: string): Promise<KycDocument> {
-    return httpService.post<KycDocument>(`/admin/kyc/${documentId}/approve`);
+  reviewDocument(
+    documentId: string,
+    input: ReviewKycDocumentInput,
+  ): Promise<KycDocument> {
+    return httpService.post<KycDocument>(
+      `/admin/kyc/documents/${documentId}/review`,
+      input,
+    );
   }
 
-  reject(documentId: string, reason: string): Promise<KycDocument> {
-    return httpService.post<KycDocument>(`/admin/kyc/${documentId}/reject`, {
-      reason,
-    });
-  }
-
+  // ── Identité niveau 1 ──────────────────────────────
   listPendingIdentity(
     page = 1,
     perPage = 20,

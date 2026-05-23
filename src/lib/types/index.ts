@@ -10,6 +10,7 @@ export type {
   KycDocument,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "./kyc";
 export type { AppSetting } from "./settings";
