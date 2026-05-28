@@ -8,6 +8,7 @@ export interface KycIdentityReview {
   country_code: string;
   npi_number: string | null;
   cip_photo: string | null;
+  cip_back_photo: string | null;
   cip_validation: Validation | string;
   selfie_photo: string | null;
   selfie_validation: Validation | string;

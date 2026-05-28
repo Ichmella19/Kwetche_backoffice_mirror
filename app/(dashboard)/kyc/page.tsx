@@ -294,10 +294,16 @@ export default function KycPage() {
                         <p className="text-sm font-medium">Carte CIP</p>
                         <StatusBadge status={item.cip_validation} />
                       </div>
-                      <DocumentPreview
-                        fileUrl={item.cip_photo}
-                        label="Carte CIP"
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <DocumentPreview
+                          fileUrl={item.cip_photo}
+                          label="CIP — recto"
+                        />
+                        <DocumentPreview
+                          fileUrl={item.cip_back_photo}
+                          label="CIP — verso"
+                        />
+                      </div>
                       <div className="flex flex-wrap justify-end gap-2">
                         <Button
                           variant="accent"

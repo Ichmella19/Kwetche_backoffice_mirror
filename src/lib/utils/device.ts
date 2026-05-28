@@ -17,7 +17,7 @@ export const getDeviceId = (): string => {
   if (typeof window === "undefined") return "server";
   let id = localStorage.getItem(STORAGE_KEYS.DEVICE_ID);
   if (!id) {
-    id = randomId();
+    id = randomId();  
     localStorage.setItem(STORAGE_KEYS.DEVICE_ID, id);
   }
   return id;
