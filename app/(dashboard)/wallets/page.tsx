@@ -263,7 +263,7 @@ function PlatformWalletCard({
               </div>
               <p className="text-sm text-muted">
                 Compte « maison » utilisé comme escrow pour les flux tontine.
-                N'appartient à personne physique — son solde reflète le passif
+                N&apos;appartient à personne physique — son solde reflète le passif
                 net de la plateforme envers ses utilisateurs.
               </p>
             </div>
@@ -309,7 +309,7 @@ function PlatformWalletCard({
               </p>
               <Button asChild size="sm" variant="outline">
                 <Link href={`${ROUTES.WALLETS}/platform`}>
-                  Voir l'historique
+                  Voir l&apos;historique
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>

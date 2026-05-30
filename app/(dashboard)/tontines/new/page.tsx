@@ -127,8 +127,8 @@ export default function NewTontinePage() {
             required
             info={
               <>
-                <strong>Ordre révélé</strong> : l'ordre des bénéficiaires est
-                affiché dès l'ouverture des inscriptions. <br />
+                <strong>Ordre révélé</strong> : l&apos; ordre des bénéficiaires est
+                affiché dès l&apos; ouverture des inscriptions. <br />
                 <strong>Aléatoire à chaque tour</strong> : le gagnant de chaque
                 cycle est tiré au sort parmi les non-encore-servis.
               </>

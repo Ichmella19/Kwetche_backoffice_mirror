@@ -115,11 +115,16 @@ export function useRealtime(
   events: ReadonlyArray<RealtimeEvent | string> | undefined,
   handler: (msg: RealtimeMessage) => void,
 ) {
-  const handlerRef = useRef(handler);
-  handlerRef.current = handler;
-  const watchedRef = useRef(events);
-  watchedRef.current = events;
+ const handlerRef = useRef(handler);
+const watchedRef = useRef(events);
 
+useEffect(() => {
+  handlerRef.current = handler;
+}, [handler]);
+
+useEffect(() => {
+  watchedRef.current = events;
+}, [events]);
   useEffect(() => {
     realtimeService.connect();
     const unsub = realtimeService.subscribe((msg) => {
