@@ -7,6 +7,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getErrorMessage } from "@/lib/utils/helpers";
+import {
+  realtimeService,
+  type RealtimeEvent,
+  type RealtimeMessage,
+} from "@/presentation/services/realtime";
 
 export { useAuth } from "@/presentation/contexts/auth-context";
 export { useTheme } from "@/presentation/contexts/theme-context";
@@ -21,6 +26,11 @@ interface AsyncState<T> {
 /**
  * Exécute une promesse et expose son état. `execute` est stable et relance
  * l'appel à la demande (refetch).
+ *
+ * IMPORTANT : `factory` est utilisé comme dépendance de l'effet de fetch.
+ * Pour que les filtres / paramètres déclenchent un refetch, **wrappe ta
+ * factory dans `useCallback`** avec les bonnes deps. Sinon une factory
+ * inline sera recréée à chaque render et boucle infinie.
  */
 export function useAsync<T>(factory: () => Promise<T>, immediate = true) {
   const factoryRef = useRef(factory);
@@ -46,7 +56,9 @@ export function useAsync<T>(factory: () => Promise<T>, immediate = true) {
 
   useEffect(() => {
     if (immediate) execute().catch(() => undefined);
-  }, [execute, immediate]);
+    // `factory` fait partie des deps : changer un filtre côté caller
+    // (via useCallback avec ses propres deps) déclenche un refetch.
+  }, [execute, immediate, factory]);
 
   return { ...state, execute, setData: (data: T) => setState((s) => ({ ...s, data }) ) };
 }
@@ -89,4 +101,32 @@ export function useLocalStorage<T>(key: string, initial: T) {
   );
 
   return [value, set] as const;
+}
+
+/**
+ * Abonne le composant aux events realtime backend. `events` peut être :
+ *  - undefined → tous les events reçus
+ *  - une liste de noms d'event → seulement ceux-là
+ *
+ * Le `handler` est appelé à chaque message correspondant. Cas d'usage classique :
+ * forcer un `execute()` d'un `useAsync` pour rafraîchir une liste / un détail.
+ */
+export function useRealtime(
+  events: ReadonlyArray<RealtimeEvent | string> | undefined,
+  handler: (msg: RealtimeMessage) => void,
+) {
+  const handlerRef = useRef(handler);
+  handlerRef.current = handler;
+  const watchedRef = useRef(events);
+  watchedRef.current = events;
+
+  useEffect(() => {
+    realtimeService.connect();
+    const unsub = realtimeService.subscribe((msg) => {
+      const watched = watchedRef.current;
+      if (watched && !watched.includes(msg.event)) return;
+      handlerRef.current(msg);
+    });
+    return unsub;
+  }, []);
 }

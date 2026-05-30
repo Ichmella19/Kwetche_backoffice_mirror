@@ -4,7 +4,9 @@
 
 import { kycRepository } from "@/core/data/repositories";
 import type {
+  CreateDocumentRequestInput,
   KycDocument,
+  KycDocumentRequest,
   KycIdentityPendingResponse,
   KycIdentityReview,
   ReviewKycDocumentInput,
@@ -25,6 +27,25 @@ class KycService {
       ...input,
       reason: input.reason?.trim() || undefined,
     });
+  }
+
+  // ── Demandes de pieces complementaires ─────────────
+  createRequest(
+    input: CreateDocumentRequestInput,
+  ): Promise<KycDocumentRequest> {
+    return kycRepository.createRequest({
+      ...input,
+      label: input.label.trim(),
+      note: input.note?.trim() || undefined,
+    });
+  }
+
+  listRequests(userId: string, status?: string): Promise<KycDocumentRequest[]> {
+    return kycRepository.listRequests(userId, status);
+  }
+
+  cancelRequest(requestId: string): Promise<KycDocumentRequest> {
+    return kycRepository.cancelRequest(requestId);
   }
 
   // ── Identité niveau 1 ──────────────────────────────

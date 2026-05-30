@@ -1,5 +1,7 @@
 import type {
+  CreateDocumentRequestInput,
   KycDocument,
+  KycDocumentRequest,
   KycIdentityPendingResponse,
   KycIdentityReview,
   ReviewKycDocumentInput,
@@ -13,6 +15,11 @@ export interface IKycRepository {
     documentId: string,
     input: ReviewKycDocumentInput,
   ): Promise<KycDocument>;
+
+  // ── Demandes de pieces complementaires ─────────────
+  createRequest(input: CreateDocumentRequestInput): Promise<KycDocumentRequest>;
+  listRequests(userId: string, status?: string): Promise<KycDocumentRequest[]>;
+  cancelRequest(requestId: string): Promise<KycDocumentRequest>;
 
   // ── Identité niveau 1 ──────────────────────────────
   listPendingIdentity(

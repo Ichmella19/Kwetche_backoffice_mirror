@@ -22,6 +22,13 @@ export type { TextareaProps } from "./textarea";
 
 export { Label } from "./label";
 export { Field } from "./field";
+export { FieldWithInfo } from "./field-with-info";
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
 export { Badge, badgeVariants } from "./badge";
 export type { BadgeProps } from "./badge";
@@ -59,3 +66,5 @@ export {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "./dropdown-menu";
+
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";

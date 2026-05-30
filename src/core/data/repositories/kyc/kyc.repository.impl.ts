@@ -1,7 +1,9 @@
 import { httpService } from "@/core/data/http.service";
 import type { IKycRepository } from "@/core/domain/repositories";
 import type {
+  CreateDocumentRequestInput,
   KycDocument,
+  KycDocumentRequest,
   KycIdentityPendingResponse,
   KycIdentityReview,
   ReviewKycDocumentInput,
@@ -23,6 +25,25 @@ export class KycRepository implements IKycRepository {
     return httpService.post<KycDocument>(
       `/admin/kyc/documents/${documentId}/review`,
       input,
+    );
+  }
+
+  // ── Demandes de pieces complementaires ─────────────
+  createRequest(
+    input: CreateDocumentRequestInput,
+  ): Promise<KycDocumentRequest> {
+    return httpService.post<KycDocumentRequest>("/admin/kyc/requests", input);
+  }
+
+  listRequests(userId: string, status?: string): Promise<KycDocumentRequest[]> {
+    return httpService.get<KycDocumentRequest[]>("/admin/kyc/requests", {
+      query: { user_id: userId, status },
+    });
+  }
+
+  cancelRequest(requestId: string): Promise<KycDocumentRequest> {
+    return httpService.post<KycDocumentRequest>(
+      `/admin/kyc/requests/${requestId}/cancel`,
     );
   }
 

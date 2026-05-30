@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -66,7 +66,7 @@ export default function ProfilePage() {
     data: sessions,
     isLoading: sessionsLoading,
     execute: refreshSessions,
-  } = useAsync(() => sessionService.listMine());
+  } = useAsync(useCallback(() => sessionService.listMine(), []));
 
   const {
     register,

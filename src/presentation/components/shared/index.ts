@@ -13,3 +13,4 @@ export { StatCard } from "./stat-card";
 export { EmptyState } from "./empty-state";
 export { Pagination } from "./pagination";
 export { ConfirmDialog } from "./confirm-dialog";
+export { Sparkline } from "./sparkline";

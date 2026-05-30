@@ -4,9 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  PiggyBank,
+  Scale,
+  Shield,
   ShieldCheck,
   SlidersHorizontal,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/presentation/contexts/auth-context";
@@ -32,10 +36,34 @@ const NAV: NavItem[] = [
     grant: Grant.USER_READ,
   },
   {
+    label: "Équipe staff",
+    href: ROUTES.STAFF,
+    icon: Shield,
+    grant: Grant.USER_READ,
+  },
+  {
     label: "Vérification KYC",
     href: ROUTES.KYC,
     icon: ShieldCheck,
     grant: Grant.KYC_REVIEW,
+  },
+  {
+    label: "Portefeuilles",
+    href: ROUTES.WALLETS,
+    icon: Wallet,
+    grant: Grant.WALLET_READ,
+  },
+  {
+    label: "Tontines",
+    href: ROUTES.TONTINES,
+    icon: PiggyBank,
+    grant: Grant.TONTINE_READ,
+  },
+  {
+    label: "Recouvrement",
+    href: ROUTES.RECOUVREMENT,
+    icon: Scale,
+    grant: Grant.RECOUVREMENT_READ,
   },
   {
     label: "Paramètres",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Lock, SlidersHorizontal } from "lucide-react";
 import { PageHeader } from "@/presentation/components/shared/page-header";
 import { ErrorState } from "@/presentation/components/shared/error";
@@ -103,8 +103,8 @@ function SettingRow({
 export default function SettingsPage() {
   const { hasGrant } = useAuth();
   const canEdit = hasGrant(Grant.SETTINGS_WRITE);
-  const { data, isLoading, error, execute, setData } = useAsync<AppSetting[]>(() =>
-    settingsService.list(),
+  const { data, isLoading, error, execute, setData } = useAsync<AppSetting[]>(
+    useCallback(() => settingsService.list(), []),
   );
 
   const handleSaved = (updated: AppSetting) => {

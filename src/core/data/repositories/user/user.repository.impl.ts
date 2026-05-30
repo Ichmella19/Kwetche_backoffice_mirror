@@ -3,11 +3,29 @@ import type { IUserRepository } from "@/core/domain/repositories";
 import type {
   AdminCreateUserInput,
   AdminUpdateUserInput,
+  Debt,
+  Relance,
   RevokeOtherSessionsResult,
+  TontineMember,
+  Tontine,
   User,
   UserListResponse,
   UserSession,
 } from "@/lib/types";
+
+export interface UserTontineEntry {
+  tontine: Tontine;
+  membership: TontineMember;
+}
+
+export interface UserDebtEntry extends Debt {
+  relances: Relance[];
+}
+
+export interface UserDebtsResponse {
+  items: UserDebtEntry[];
+  total: number;
+}
 
 export class UserRepository implements IUserRepository {
   me(): Promise<User> {
@@ -24,6 +42,7 @@ export class UserRepository implements IUserRepository {
       perPage?: number;
       search?: string;
       includeDeleted?: boolean;
+      roles?: string[];
     } = {},
   ): Promise<UserListResponse> {
     return httpService.get<UserListResponse>("/admin/users", {
@@ -32,6 +51,9 @@ export class UserRepository implements IUserRepository {
         per_page: params.perPage,
         search: params.search,
         include_deleted: params.includeDeleted,
+        roles: params.roles && params.roles.length > 0
+          ? params.roles.join(",")
+          : undefined,
       },
     });
   }
@@ -81,6 +103,16 @@ export class UserRepository implements IUserRepository {
     return httpService.delete<User>(`/admin/users/${userId}`, {
       body: { reason },
     });
+  }
+
+  listUserTontines(userId: string): Promise<UserTontineEntry[]> {
+    return httpService.get<UserTontineEntry[]>(
+      `/admin/users/${userId}/tontines`,
+    );
+  }
+
+  listUserDebts(userId: string): Promise<UserDebtsResponse> {
+    return httpService.get<UserDebtsResponse>(`/admin/users/${userId}/debts`);
   }
 }
 

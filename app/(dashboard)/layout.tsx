@@ -1,12 +1,21 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AuthGuard } from "@/presentation/components/auth/auth-guard";
 import { Sidebar } from "@/presentation/components/layout/sidebar";
 import { Topbar } from "@/presentation/components/layout/topbar";
+import { realtimeService } from "@/presentation/services/realtime";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // BO realtime : ouvre la WS dès l'entrée dans le dashboard (l'AuthGuard a
+  // déjà validé la session). Backend abonne automatiquement le staff au
+  // channel `admin`. Reconnect avec backoff géré par le service.
+  useEffect(() => {
+    realtimeService.connect();
+    return () => realtimeService.disconnect();
+  }, []);
 
   return (
     <AuthGuard>

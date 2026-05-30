@@ -26,6 +26,7 @@ class UserService {
     perPage?: number;
     search?: string;
     includeDeleted?: boolean;
+    roles?: string[];
   }): Promise<UserListResponse> {
     return userRepository.listUsers(params);
   }
@@ -77,6 +78,14 @@ class UserService {
 
   deleteUser(userId: string, reason: string): Promise<User> {
     return userRepository.deleteUser(userId, reason.trim());
+  }
+
+  listUserTontines(userId: string) {
+    return userRepository.listUserTontines(userId);
+  }
+
+  listUserDebts(userId: string) {
+    return userRepository.listUserDebts(userId);
   }
 }
 

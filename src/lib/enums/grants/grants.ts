@@ -25,6 +25,12 @@ export enum Grant {
   LOAN_APPROVE = "loan.approve",
   LOAN_REJECT = "loan.reject",
 
+  RECOUVREMENT_READ = "recouvrement.read",
+  RECOUVREMENT_WORK = "recouvrement.work",
+  RECOUVREMENT_RESOLVE = "recouvrement.resolve",
+
+  NOTIFICATION_SEND = "notification.send",
+
   SUPPORT_READ = "support.read",
   SUPPORT_TICKET = "support.ticket",
   SUPPORT_WRITE = "support.write",

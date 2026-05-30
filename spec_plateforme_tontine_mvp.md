@@ -1,8 +1,8 @@
 # Plateforme tontine — Spécifications fonctionnelles MVP
 
 **Document de référence consolidé**
-**Version 1.1**
-**Date : mai 2026**
+**Version 1.2**
+**Date : 30 mai 2026**
 
 ---
 
@@ -51,6 +51,7 @@ Les utilisateurs sont **anonymes entre eux**. Ils ne choisissent pas qui rejoint
 - **Transparence totale** : pas de fonctionnalité cachée, frais affichés au coût réel, historique consultable à vie
 - **Conformité réglementaire** : respect des règles anti-blanchiment, coopération avec les autorités, auditabilité complète
 - **Anti-doublon par construction** : un CIP = un compte, à vie
+- **Score de confiance interne** : chaque utilisateur a un score numérique qui évolue à chaque événement (cotisation à temps, défaut, dette recouvrée, désistement…). Outil d'aide à la décision pour l'admin (limite de tontines simultanées, éligibilité prêts futurs). Jamais affiché à l'utilisateur.
 
 ---
 
@@ -104,11 +105,15 @@ Le CIP est **obligatoire pour tous** les utilisateurs. Sans CIP, pas de compte d
 | Niveau | Conditions | Ce que ça débloque |
 |--------|-----------|--------------------|
 | **0** | Téléphone + OTP | Exploration, simulateur, consultation |
-| **1** | CIP vérifié par agent BO | Recharger, cotiser tontine, recevoir cagnotte, retirer (plafonds modérés) |
-| **2** | KYC renforcé : justificatifs domicile + revenus + activité pro | Demande de prêt, plafonds élevés, scoring crédit activé |
-| **3** | Validation manuelle officier conformité + super-admin (double signature) | Très gros montants, prêts importants, traitement de litiges complexes — expire après 6 mois sans usage |
+| **1** | CIP recto + verso + selfie + NPI, vérifiés par agent BO (seul **hard-gate**) | Recharger, cotiser tontine, recevoir cagnotte, retirer (plafonds modérés) |
+| **2** | Revenus structurés : montant déclaré, source, statut professionnel, employeur, ancienneté, charges, personnes à charge + justificatifs | Plafonds élevés, scoring crédit interne activé |
+| **3** | **Banque** (RIB / IBAN, titulaire) **et / ou Mobile Money** (MTN, Moov, Celtiis) **et / ou garant** (nom, téléphone, lien, adresse). Chaque sous-section est ajoutable indépendamment, dans l'ordre choisi par l'utilisateur. Validation manuelle officier conformité + super-admin (double signature) | Très gros montants, prêts importants, traitement de litiges complexes — expire après 6 mois sans usage |
 
 **Règle d'or** : aucune action sensible ne descend d'un cran. Un retrait reste verrouillé au niveau 1 même si l'utilisateur a atteint le niveau 3.
+
+**Limite de tontines simultanées** : à la validation du niveau 2 ou 3, l'admin fixe **manuellement** le nombre maximum de tontines auxquelles l'utilisateur peut participer en même temps (`max_tontines`). Cette décision tient compte du score de confiance, des revenus déclarés, du garant et des montants visés. Il n'y a pas de formule automatique.
+
+**Niveaux 2 et 3 = optionnels et progressifs** : ils débloquent des plafonds et permissions supplémentaires, mais ne bloquent jamais l'usage de la plateforme. Seul le niveau 1 est un hard-gate.
 
 ---
 
@@ -134,6 +139,13 @@ Un seul wallet par utilisateur, en XOF. Le solde se décompose en deux zones :
 | Réservation échéance | 24h avant prélèvement automatique | Conversion en débit ou libération si annulation |
 | Recharge en cours | Recharge non confirmée | Validation ou annulation sous 1 heure |
 
+**Le wallet ne peut jamais aller en négatif.** Les sommes dues qu'on n'arrive pas à prélever ne basculent pas le solde sous zéro : elles vivent dans un **livre de dettes** dédié (cf. § 8.7 Recouvrement). Toute recharge ultérieure du wallet sert d'abord automatiquement à éteindre les dettes les plus anciennes (auto-débit) avant d'être disponible pour l'utilisateur.
+
+Tant qu'une dette est ouverte sur un compte :
+- Le **retrait** est refusé (l'utilisateur doit régler avant de retirer)
+- L'**inscription à une nouvelle tontine** est refusée
+- Le **dépôt** reste autorisé (c'est ce qui permet de solder la dette)
+
 ### 4.3 Opérations disponibles
 
 **Entrées (créditent le wallet)**
@@ -148,6 +160,7 @@ Un seul wallet par utilisateur, en XOF. Le solde se décompose en deux zones :
 - Cotisation à une tontine (prélèvement automatique à l'échéance)
 - Remboursement d'échéance de prêt
 - Pénalités prélevées sur caution
+- **Règlement de dette** (auto-débit déclenché par toute recharge tant qu'une dette est ouverte)
 
 **Mouvements internes (entre disponible et bloqué)**
 - Blocage caution à la souscription d'une tontine
@@ -183,36 +196,55 @@ Aucune fonctionnalité cachée. Tout est visible, justifié, traçable.
 
 ### 5.1 Principe
 
-La plateforme propose des tontines rotatives ouvertes au public. Tout utilisateur niveau 1+ peut créer une tontine en fixant ses paramètres, elle apparaît dans le catalogue, d'autres utilisateurs s'y inscrivent jusqu'à ce qu'elle soit complète. Le système la démarre alors automatiquement et orchestre les cycles.
+La plateforme propose deux modèles de tontines :
 
-### 5.2 Paramètres définis à la création
+- **Rotative** (ROSCA) : cagnotte qui tourne, un bénéficiaire par cycle.
+- **Épargne collective** : chaque membre cumule pour lui-même, payout à maturité.
 
-Le créateur fixe librement (dans une fourchette plafond définie par la plateforme) :
+**C'est la plateforme (admin) qui crée et configure les tontines.** Les utilisateurs **ne créent pas** de tontine eux-mêmes : ils parcourent un catalogue de tontines `ouvertes aux inscriptions`, choisissent celles qui leur conviennent, et s'y inscrivent librement (sous réserve d'éligibilité). Les participants restent **anonymes entre eux**.
+
+### 5.2 Paramètres définis à la création par l'admin
+
+L'admin fixe (dans une fourchette plafond définie par la plateforme) :
 
 - Nom et description de la tontine
+- Type (rotative ou épargne)
 - Montant de cotisation par cycle
-- Fréquence des cycles (hebdomadaire, mensuelle, etc.)
+- Fréquence des cycles (quotidienne, hebdomadaire, mensuelle)
 - Nombre de places (= nombre de participants)
-- **Montant de caution** à bloquer à la souscription
-- **Pourcentage de pénalité** prélevé sur la caution en cas de défaut
-
-**Durée affichée** : pour une tontine de N participants, la durée affichée est de **N+1 cycles**. Cette valeur est présentée telle quelle aux utilisateurs, sans explication particulière.
+- **Montant de caution** à bloquer à la souscription (peut être à 0)
+- **Niveau KYC minimum requis** pour s'inscrire
+- **Mode de tirage** (rotative uniquement) :
+  - **Ordre révélé** : l'ordre des bénéficiaires est connu de tous dès l'ouverture des inscriptions
+  - **Aléatoire à chaque tour** : le bénéficiaire de chaque tour est tiré au sort à l'ouverture du cycle, parmi les participants pas encore servis
+- **Date de démarrage** souhaitée
+- **Fenêtre de désistement** en jours avant la date de démarrage
+- **Pourcentage de pénalité** retenu sur la caution si désistement à l'intérieur de la fenêtre
+- **Bonus de fidélité** (activé / désactivé) et son taux
 
 Tous ces paramètres sont affichés clairement à tout candidat avant souscription. Aucune surprise possible.
 
 ### 5.3 Cycle de vie
 
 **Phase 1 — Constitution (anonyme)**
-1. Création de tontine par un utilisateur
-2. Tontine listée publiquement, visible aux niveaux 1+
-3. Souscription des participants : caution prélevée et bloquée immédiatement
-4. Tant que la tontine n'est pas complète, elle reste en phase de constitution
+1. Création et publication de la tontine par l'admin
+2. Tontine listée dans le catalogue public, visible aux utilisateurs au niveau KYC requis
+3. Inscription des participants (« premier arrivé, premier servi ») — à l'inscription, **deux prélèvements immédiats** sur le wallet :
+   - la **caution** (bloquée), si elle est > 0
+   - la **1ère cotisation**, transférée à la plateforme en escrow
+   Si le wallet ne couvre pas le total, l'inscription est refusée.
+4. L'inscription est également refusée si l'utilisateur a une **dette ouverte** ou a atteint son **nombre maximum de tontines simultanées**
+5. Tant que la tontine n'est pas complète, elle reste en phase de constitution
 
-**Retrait avant démarrage** : possible à tout moment, mais **caution perdue intégralement**. La place est libérée pour un autre candidat.
+**Désistement avant démarrage** :
+- **En dehors de la fenêtre de désistement** : caution intégralement débloquée + 1ère cotisation intégralement remboursée
+- **À l'intérieur de la fenêtre** : une partie de la caution (taux paramétré) est retenue et reversée au fond de réserve de la tontine ; la 1ère cotisation reste intégralement remboursée
 
-**Phase 2 — Démarrage automatique**
-- Dès que toutes les places sont remplies, le système déclenche le démarrage
-- Notification envoyée à tous les souscripteurs
+**Après démarrage** : le désistement n'est plus possible. L'utilisateur doit aller jusqu'au bout (ou subir le mécanisme de défaut, cf. § 5.4).
+
+**Phase 2 — Démarrage**
+- À la **date de démarrage**, si le quota d'inscrits est atteint, le système démarre la tontine automatiquement et notifie tous les souscripteurs
+- **Sinon, la tontine bascule dans une file « à démarrer »** au back-office. L'admin tranche : démarrer quand même avec les inscrits, reporter la date de démarrage, ou annuler (annulation = caution débloquée et 1ère cotisation remboursée pour tous)
 
 **Phase 3 — Cycles de cotisation**
 1. **Cycle 1 — Constitution du fond de réserve** : les cotisations de tous les participants sont collectées et versées dans le fond de réserve interne de la tontine. Aucun tirage au sort n'est effectué à ce cycle. Aucune information spécifique n'est communiquée aux participants sur la nature de ce cycle.
@@ -230,11 +262,15 @@ Tous ces paramètres sont affichés clairement à tout candidat avant souscripti
 
 ### 5.4 Gestion des défauts
 
-- 1 défaut → pénalité prélevée sur caution + relance
-- Si la caution s'épuise par cumul de pénalités → le fond de réserve de la tontine prend le relais pour absorber le manque
-- Si le fond de réserve est également épuisé → exclusion automatique du participant
-- En cours de tontine, la place de l'exclu n'est pas remplacée
-- Sa caution résiduelle reste en compensation pour les autres participants
+**Cotisation manquée** : si au moment de la collecte d'un cycle le wallet d'un membre ne couvre pas la cotisation, celle-ci est marquée « manquée » et une **dette dédiée** est immédiatement créée à son nom (1 cotisation manquée = 1 dette). Le mécanisme de recouvrement (cf. § 8.7) prend le relais : relances, auto-débit dès qu'une recharge arrive, escalade éventuelle.
+
+**Cycles manqués consécutifs (seuil paramétrable, par défaut 2)** :
+- La **caution** est intégralement retenue (versée au fond de réserve de la tontine)
+- Le membre passe en statut **« défaillant »** : sa participation est bloquée
+- S'il n'avait pas encore reçu sa cagnotte, **son tour est suspendu** (la cagnotte de son cycle, si elle a déjà été collectée auprès des autres, reste à la plateforme jusqu'à décision d'un agent)
+- Seul un **agent recouvrement** peut décider, plus tard, de lever ce blocage (« libérer le membre »)
+
+**Bonus de fidélité (récompense optionnelle)** : si activé à la création de la tontine et que la tontine se termine nominalement, un pourcentage du fond de réserve est distribué aux bénéficiaires de la **2ème moitié des tours** (du rang médian au dernier), avec une pondération **croissante** : le dernier servi reçoit la plus grosse part. Objectif : inciter les membres servis tardivement à tenir jusqu'au bout au lieu de décrocher.
 
 ### 5.5 Fond de réserve — Modèle économique interne *(Usage interne — Non communiqué aux participants)*
 
@@ -524,6 +560,26 @@ Dossier transmis sous scellé, traçabilité totale conservée.
 
 L'auditeur peut reconstituer l'intégralité d'un dossier à tout moment : chaque action, chaque message, chaque mesure conservatoire conservée immuablement.
 
+### 8.7 Recouvrement (équipe interne dédiée)
+
+Tout litige financier dans lequel un utilisateur **doit** de l'argent à la plateforme est traité par une **équipe interne de recouvrement**, distincte du support de tickets. Ce module poursuit les débiteurs ; il ne traite pas les réclamations entrantes.
+
+**Flux**
+1. **Création de dette** : à chaque cotisation manquée (ou autre créance), une dette est ouverte au nom de l'utilisateur (1 cotisation manquée = 1 dette, granularité fine).
+2. **Auto-débit silencieux** : tant que la dette est ouverte, toute recharge du wallet la solde automatiquement (les plus anciennes en premier). Le mécanisme est invisible pour les autres modules — l'utilisateur recharge, la dette s'éteint, la cotisation correspondante repasse en « payée ».
+3. **Relances automatiques** : si la dette n'est pas soldée, des relances multi-canal (par défaut **push + SMS**) sont envoyées à intervalle régulier (paramétrable, défaut 2 jours), jusqu'à un nombre maximum (défaut 3).
+4. **Escalade automatique** : passé le seuil maximum de relances sans paiement, la dette est marquée **en recouvrement** et un **dossier** est ouvert dans la file commune de l'équipe.
+5. **File commune + auto-assignation** : tout agent disposant des bons grants peut s'auto-assigner un dossier de la file.
+6. **Travail journalisé** : l'agent ajoute des actions (note, appel, plan de paiement, paiement reçu) — chaque action est conservée immuable.
+7. **Encaissement manuel** : si l'agent reçoit un paiement en cash, il l'enregistre via une action « paiement reçu » qui décrémente la dette.
+8. **Clôture** : l'agent peut marquer le dossier résolu (dette intégralement réglée) ou irrécouvrable (passage en perte).
+
+**Tontine défaillant** : un membre tontine en statut « défaillant » (cf. § 5.4) ne peut être réintégré qu'à la décision d'un agent disposant du grant de résolution. Cette décision libère sa participation pour les cycles à venir mais ne lui restitue pas automatiquement la cagnotte ou la caution déjà perdues.
+
+**Blocages générés par une dette ouverte** : tant qu'une dette est en cours, l'utilisateur ne peut pas retirer de son wallet ni s'inscrire à une nouvelle tontine (cf. § 4 et § 5.3).
+
+**Notifications utilisateur** : chaque relance et chaque escalade déclenchent une notification dédiée. L'utilisateur consulte ses dettes (montant dû, restant, nombre de relances) depuis son app.
+
 ---
 
 ## 9. Méthodes de paiement
@@ -532,9 +588,11 @@ L'auditeur peut reconstituer l'intégralité d'un dossier à tout moment : chaqu
 
 | Canal | Recharge | Retrait | Intermédiaire | Cas d'usage |
 |-------|----------|---------|--------------|-------------|
-| **Mobile money** | Instantanée | Instantané | Agrégateur unique (KKiapay/FedaPay/PaySika) | Quotidien |
+| **Mobile money** (MTN, Moov, Celtiis) | Instantanée | Instantané | Agrégateur unique (KKiapay/FedaPay/PaySika) | Quotidien |
 | **Virement bancaire** | 24-72h | 24-48h | Banque partenaire | Gros montants, diaspora |
 | **Carte bancaire** | Instantanée | Non disponible | Passerelle pro avec 3DS | Urgence, international |
+
+**Mobile Money dans le KYC niveau 3** : l'utilisateur peut enregistrer son numéro Mobile Money (opérateur + numéro) **indépendamment** de son compte bancaire. Beaucoup d'utilisateurs au Bénin n'ont pas de compte bancaire mais ont du Mobile Money — exiger une banque pour valider un numéro Mobile Money serait un frein injustifié. Banque, Mobile Money et garant sont trois sous-sections autonomes du niveau 3.
 
 ### 9.2 Plafonds et frais
 
@@ -742,9 +800,18 @@ XAF, Naira, Yen, Rouble, Dollar, Euro avec conversion via API de change professi
 | **KYC** | Know Your Customer, processus de vérification d'identité |
 | **Wallet** | Compte interne en XOF de l'utilisateur sur la plateforme |
 | **Caution** | Somme bloquée à la souscription d'une tontine, garantissant l'engagement |
+| **Première cotisation** | Cotisation du tout premier cycle de l'utilisateur, prélevée immédiatement à l'inscription en plus de la caution (mécanique « premier arrivé, premier servi ») |
 | **Cycle** | Période entre deux versements de cagnotte dans une tontine |
 | **Cagnotte** | Somme collectée à un cycle, versée au gagnant tiré au sort |
+| **Mode de tirage** | Façon dont les bénéficiaires d'une tontine rotative sont désignés : *révélé* (ordre fixe affiché à tous d'avance) ou *aléatoire à chaque tour* |
+| **Bonus de fidélité** | Pourcentage du fond de réserve redistribué aux derniers bénéficiaires en récompense d'aller jusqu'au bout |
+| **Membre défaillant** | Statut d'un participant ayant manqué le seuil de cycles consécutifs : caution perdue, participation bloquée, payouts suspendus jusqu'à décision agent |
 | **Score** | Note interne sur 1000 calculée en temps réel sur le profil utilisateur |
+| **Score de confiance** | Score numérique interne évoluant à chaque événement utilisateur (cotisation à temps, défaut, dette recouvrée, désistement…). Sert d'aide à la décision admin. Jamais affiché à l'utilisateur |
+| **Dette** | Créance ouverte au nom de l'utilisateur (1 cotisation manquée = 1 dette). Auto-soldée par toute recharge wallet ultérieure |
+| **Recouvrement** | Équipe interne dédiée qui poursuit les utilisateurs débiteurs après échec des relances automatiques |
+| **max_tontines** | Nombre maximum de tontines simultanées par utilisateur, fixé manuellement par l'admin à la validation KYC niveau 2 ou 3 |
+| **Mobile Money** | Compte de paiement mobile (MTN, Moov, Celtiis au Bénin). Peut être ajouté au KYC niveau 3 indépendamment d'un compte bancaire |
 | **SLA** | Service Level Agreement, délai maximum garanti |
 | **OTP** | One-Time Password, code à usage unique envoyé par SMS |
 | **2FA** | Two-Factor Authentication, double facteur d'authentification |

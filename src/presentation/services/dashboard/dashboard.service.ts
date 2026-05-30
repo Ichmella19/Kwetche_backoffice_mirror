@@ -1,16 +1,18 @@
 /**
- * Service tableau de bord.
+ * Service tableau de bord : snapshot global + séries temporelles.
+ * Endpoints backend : `/admin/dashboard/stats` et `/admin/dashboard/timeseries`.
  */
 
-import { kycRepository } from "@/core/data/repositories";
-import type { DashboardStats } from "@/lib/types";
+import { dashboardRepository } from "@/core/data/repositories";
+import type { DashboardStats, DashboardTimeseries } from "@/lib/types";
 
 class DashboardService {
-  async getStats(): Promise<DashboardStats> {
-    const pending = await kycRepository.listPendingDocuments();
-    return {
-      pendingKyc: pending.length,
-    };
+  getStats(): Promise<DashboardStats> {
+    return dashboardRepository.stats();
+  }
+
+  getTimeseries(days = 30): Promise<DashboardTimeseries> {
+    return dashboardRepository.timeseries(days);
   }
 }
 

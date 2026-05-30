@@ -21,7 +21,7 @@ import { Field } from "@/presentation/components/ui/field";
 import { Input } from "@/presentation/components/ui/input";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { Textarea } from "@/presentation/components/ui/textarea";
-import { useAsync, useToast } from "@/presentation/hooks";
+import { useAsync, useRealtime, useToast } from "@/presentation/hooks";
 import { useAuth } from "@/presentation/contexts/auth-context";
 import { kycService } from "@/presentation/services/kyc";
 import { Grant, Validation, validationLabel } from "@/lib/enums";
@@ -142,6 +142,7 @@ export default function KycPage() {
   const [reviewTarget, setReviewTarget] = useState<ReviewTarget>("identity");
   const [reason, setReason] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [maxTontines, setMaxTontines] = useState("");
   const [status, setStatus] = useState("pending");
   const [busy, setBusy] = useState(false);
 
@@ -157,6 +158,14 @@ export default function KycPage() {
     execute().catch(() => undefined);
   }, [execute, page, status]);
 
+  // Live : refresh dès qu'un nouveau dossier identité arrive (notification BO).
+  useRealtime(
+    ["kyc.identity.submitted", "kyc.document.submitted"],
+    () => {
+      execute().catch(() => undefined);
+    },
+  );
+
   const openAction = (
     item: KycIdentityReview,
     next: Action,
@@ -167,6 +176,7 @@ export default function KycPage() {
     setReviewTarget(nextTarget);
     setReason("");
     setExpiresAt("");
+    setMaxTontines("");
   };
 
   const close = () => {
@@ -198,6 +208,10 @@ export default function KycPage() {
         identity_expires_at:
           action === "approve" && applyCip ? expiresAt : undefined,
         reason,
+        max_tontines:
+          action === "approve" && maxTontines.trim().length > 0
+            ? Number(maxTontines)
+            : undefined,
       });
       toast.success(meta.toast);
       setAction(null);
@@ -410,6 +424,22 @@ export default function KycPage() {
               value={expiresAt}
               min={new Date().toISOString().slice(0, 10)}
               onChange={(e) => setExpiresAt(e.target.value)}
+            />
+          </Field>
+        )}
+        {action === "approve" && (
+          <Field
+            label="Tontines simultanées max (optionnel)"
+            htmlFor="identity-max-tontines"
+          >
+            <Input
+              id="identity-max-tontines"
+              type="number"
+              min={0}
+              max={50}
+              value={maxTontines}
+              placeholder="Laisser vide pour conserver la valeur actuelle"
+              onChange={(e) => setMaxTontines(e.target.value)}
             />
           </Field>
         )}

@@ -31,4 +31,6 @@ export interface ReviewKycIdentityInput {
   selfie_validation?: Validation;
   identity_expires_at?: string;
   reason?: string;
+  /** Limite du nombre de tontines simultanées (fixée par l'admin à la validation KYC). */
+  max_tontines?: number;
 }

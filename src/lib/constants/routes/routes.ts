@@ -7,6 +7,11 @@ export const ROUTES = {
   KYC: "/kyc",
   KYC_DOCUMENTS: "/kyc/documents",
   USERS: "/users",
+  STAFF: "/staff",
+  WALLETS: "/wallets",
+  TONTINES: "/tontines",
+  TONTINE_NEW: "/tontines/new",
+  RECOUVREMENT: "/recouvrement",
   SETTINGS: "/settings",
   PROFILE: "/profile",
 } as const;
