@@ -125,6 +125,7 @@ useEffect(() => {
 useEffect(() => {
   watchedRef.current = events;
 }, [events]);
+
   useEffect(() => {
     realtimeService.connect();
     const unsub = realtimeService.subscribe((msg) => {
