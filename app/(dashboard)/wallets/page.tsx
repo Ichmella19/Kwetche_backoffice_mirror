@@ -263,8 +263,8 @@ function PlatformWalletCard({
               </div>
               <p className="text-sm text-muted">
                 Compte « maison » utilisé comme escrow pour les flux tontine.
-                N&apos;appartient à personne physique — son solde reflète le passif
-                net de la plateforme envers ses utilisateurs.
+                N&apos;appartient à personne physique — son solde reflète le
+                passif net de la plateforme envers ses utilisateurs.
               </p>
             </div>
 
@@ -305,11 +305,11 @@ function PlatformWalletCard({
               <p className="text-xs text-muted">
                 {view && view.transactions.length > 0
                   ? `${view.total} transactions au total`
-                  : "Aucune transaction pour l'instant"}
+                  : "Aucune transaction pour l’instant"}
               </p>
               <Button asChild size="sm" variant="outline">
                 <Link href={`${ROUTES.WALLETS}/platform`}>
-                  Voir l&apos;historique
+                  Voir l’historique
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>

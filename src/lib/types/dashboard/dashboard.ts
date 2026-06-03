@@ -57,8 +57,59 @@ export interface TimeseriesPoint {
 /** Réponse de `GET /api/admin/dashboard/timeseries`. */
 export interface DashboardTimeseries {
   days: number;
+  start_date?: string;
+  end_date?: string;
   signups: TimeseriesPoint[];
   debts_created: TimeseriesPoint[];
   wallet_credit: TimeseriesPoint[];
   wallet_debit: TimeseriesPoint[];
+}
+
+export interface UserAnalyticsActivity {
+  id: string;
+  type: string;
+  title: string;
+  description?: string | null;
+  actor_id?: string | null;
+  actor_role?: string | null;
+  amount?: number;
+  status?: string;
+  created_at: string;
+}
+
+export interface UserAnalytics {
+  user_id: string;
+  days: number;
+  start_date: string;
+  end_date: string;
+  summary: {
+    kyc_level: number;
+    login_count: number;
+    last_login_at: string | null;
+    active_sessions: number;
+  };
+  wallet: {
+    credit: number;
+    debit: number;
+    net: number;
+    transaction_count: number;
+  };
+  tontines: {
+    total_memberships: number;
+    active_memberships: number;
+    caution_total: number;
+  };
+  debts: {
+    total: number;
+    open: number;
+    amount_due: number;
+    recovered: number;
+  };
+  notifications: {
+    sent: number;
+    unread: number;
+  };
+  timeseries: DashboardTimeseries;
+  activity: UserAnalyticsActivity[];
+  generated_at: string;
 }

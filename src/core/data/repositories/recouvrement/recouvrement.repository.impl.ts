@@ -7,7 +7,6 @@ import type {
   RecouvrementCaseDetail,
   RecouvrementCaseListResponse,
   ResolveCaseInput,
-  TontineMember,
 } from "@/lib/types";
 
 export class RecouvrementRepository implements IRecouvrementRepository {
@@ -71,11 +70,6 @@ export class RecouvrementRepository implements IRecouvrementRepository {
     );
   }
 
-  releaseMember(memberId: string): Promise<TontineMember> {
-    return httpService.post<TontineMember>(
-      `/admin/recouvrement/members/${memberId}/release`,
-    );
-  }
 }
 
 export const recouvrementRepository = new RecouvrementRepository();

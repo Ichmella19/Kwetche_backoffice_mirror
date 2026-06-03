@@ -5,6 +5,8 @@ import type {
   Tontine,
   TontineDetail,
   TontineListResponse,
+  TontineWithdrawalRequest,
+  UpdateTontineInput,
 } from "@/lib/types";
 
 export class TontineRepository implements ITontineRepository {
@@ -28,6 +30,10 @@ export class TontineRepository implements ITontineRepository {
     return httpService.post<Tontine>("/admin/tontines", input);
   }
 
+  update(id: string, input: UpdateTontineInput): Promise<Tontine> {
+    return httpService.put<Tontine>(`/admin/tontines/${id}`, input);
+  }
+
   detail(id: string): Promise<TontineDetail> {
     return httpService.get<TontineDetail>(`/admin/tontines/${id}`);
   }
@@ -46,12 +52,14 @@ export class TontineRepository implements ITontineRepository {
     });
   }
 
-  advance(id: string): Promise<Tontine> {
-    return httpService.post<Tontine>(`/admin/tontines/${id}/advance`);
-  }
-
   cancel(id: string): Promise<Tontine> {
     return httpService.post<Tontine>(`/admin/tontines/${id}/cancel`);
+  }
+
+  listWithdrawals(id: string): Promise<TontineWithdrawalRequest[]> {
+    return httpService.get<TontineWithdrawalRequest[]>(
+      `/admin/tontines/${id}/withdrawals`,
+    );
   }
 }
 

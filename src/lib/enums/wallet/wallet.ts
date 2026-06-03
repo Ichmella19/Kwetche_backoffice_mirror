@@ -38,3 +38,47 @@ export const WALLET_STATUS_LABELS: Record<string, string> = {
   active: "Actif",
   locked: "Bloqué",
 };
+
+export enum PaymentProviderType {
+  SANDBOX = "sandbox",
+  MTN = "mtn",
+  MOOV = "moov",
+  CELTIIS = "celtiis",
+  CARD = "card",
+}
+
+export const PAYMENT_PROVIDER_LABELS: Record<string, string> = {
+  [PaymentProviderType.SANDBOX]: "Sandbox (dev)",
+  [PaymentProviderType.MTN]: "MTN MoMo",
+  [PaymentProviderType.MOOV]: "Moov Money",
+  [PaymentProviderType.CELTIIS]: "Celtiis Cash",
+  [PaymentProviderType.CARD]: "Carte bancaire",
+};
+
+export enum PlatformAccount {
+  TONTINES_RESERVE = "tontines_reserve",
+  LOANS = "loans",
+  EARNINGS = "earnings",
+  OPERATIONAL = "operational",
+  CAUTIONS = "cautions",
+  BONUS_POOL = "bonus_pool",
+}
+
+export const PLATFORM_ACCOUNT_LABELS: Record<string, string> = {
+  [PlatformAccount.TONTINES_RESERVE]: "Réserve tontines",
+  [PlatformAccount.LOANS]: "Prêts",
+  [PlatformAccount.EARNINGS]: "Gains plateforme",
+  [PlatformAccount.OPERATIONAL]: "Trésorerie opérationnelle",
+  [PlatformAccount.CAUTIONS]: "Cautions retenues",
+  [PlatformAccount.BONUS_POOL]: "Pool de fidélité",
+};
+
+export enum PlatformMovement {
+  CREDIT = "credit",
+  DEBIT = "debit",
+}
+
+export const PLATFORM_MOVEMENT_LABELS: Record<string, string> = {
+  [PlatformMovement.CREDIT]: "Crédit",
+  [PlatformMovement.DEBIT]: "Débit",
+};

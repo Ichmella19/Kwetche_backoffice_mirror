@@ -1,21 +1,30 @@
 /**
- * Service realtime BO : WebSocket vers `/api/realtime` du backend, abonné
- * automatiquement au channel `admin` (events globaux staff : nouveaux dossiers
- * KYC, recouvrement, tx wallet en attente, etc.). Heartbeat + reconnect.
+ * Service realtime BO : WebSocket vers `/api/realtime` du backend.
  *
- * Tolérance aux défaillances :
- *  - Recule exponentiellement (1 → 30 s) tant qu'il y a échec
- *  - **Abandonne après `MAX_RECONNECT_ATTEMPTS`** échecs consécutifs (évite le
- *    spam console quand le reverse-proxy ne forward pas l'upgrade WS)
- *  - Reset le compteur uniquement quand le serveur a renvoyé l'event
- *    `connected` (auth OK), pas juste sur `onopen` (qui passe même quand
- *    la close survient juste après le handshake TCP)
- *  - Une nouvelle navigation / appel manuel à `connect()` réinitialise tout
+ * Le backend abonne automatiquement chaque admin connecté à deux channels :
+ *  - `user.{user_id}` : ses events personnels
+ *  - `admin`           : flux global staff (nouveaux KYC, recouvrement, etc.)
+ *
+ * Aligné sur le client mobile (`kweche/lib/presentation/services/realtime/`) :
+ *  - **Reconnexion infinie** avec backoff exponentiel borné à 30 s, tant qu'une
+ *    session valide existe (pas de give-up arbitraire — c'est au callsite de
+ *    couper via `disconnect()` au logout / changement d'utilisateur).
+ *  - Le compteur de tentatives est reset **uniquement** quand le serveur a
+ *    renvoyé l'event `connected` (auth confirmée), pas juste sur `onopen` qui
+ *    passe même sur un proxy mal configuré.
+ *  - Heartbeat ping toutes les 25 s pour traverser NAT/proxy et détecter les
+ *    coupures silencieuses.
+ *
+ * Écart inévitable vs mobile : le navigateur web ne peut PAS passer de headers
+ * custom à WebSocket. On envoie donc le jeton en query string `?token=...` —
+ * le backend l'accepte explicitement (`get_query_argument("token")` en
+ * fallback du header).
  */
 
 import { API_BASE_URL, STORAGE_KEYS } from "@/lib/constants";
 
-const MAX_RECONNECT_ATTEMPTS = 6;
+const HEARTBEAT_MS = 25_000;
+const MAX_BACKOFF_MS = 30_000;
 
 export type RealtimeEvent =
   | "connected"
@@ -36,7 +45,9 @@ export type RealtimeEvent =
   | "debt.reminder"
   | "recouvrement.case.assigned"
   | "session.revoked"
-  | "notification.created";
+  | "notification.created"
+  | "support.ticket.created"
+  | "support.ticket.updated";
 
 export interface RealtimeMessage {
   channel: string;
@@ -53,12 +64,10 @@ class BoRealtimeService {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private explicitlyClosed = false;
-  /** Devient `true` quand le serveur a renvoyé `event: connected` (= auth OK). */
+  /** `true` quand le serveur a renvoyé `event: connected` (auth confirmée). */
   private serverHandshakeOk = false;
-  /** `true` si on a abandonné après trop d'échecs (jusqu'à un appel manuel). */
-  private givenUp = false;
 
-  /** Construit `ws://...host/api/realtime` à partir de `API_BASE_URL`. */
+  /** Construit `ws[s]://<host>/api/realtime?token=...` à partir de `API_BASE_URL`. */
   private wsUrl(): string | null {
     if (typeof window === "undefined") return null;
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -70,30 +79,27 @@ class BoRealtimeService {
   connect(): void {
     if (typeof window === "undefined") return;
     if (this.ws && this.ws.readyState <= 1) return; // déjà connecté/connectant
-    // Reset si on a abandonné (appel manuel = nouvelle intention de connecter).
-    if (this.givenUp) {
-      this.givenUp = false;
-      this.reconnectAttempt = 0;
-    }
     const url = this.wsUrl();
-    if (!url) return; // pas de token = pas de connexion
+    if (!url) return; // pas de token = pas de connexion (l'AuthGuard rattrapera)
 
     this.explicitlyClosed = false;
     this.serverHandshakeOk = false;
+
+    let socket: WebSocket;
     try {
-      this.ws = new WebSocket(url);
+      socket = new WebSocket(url);
     } catch {
       this.scheduleReconnect();
       return;
     }
-    this.ws.onopen = () => {
+    this.ws = socket;
+
+    socket.onopen = () => {
       this.startHeartbeat();
       // On NE reset PAS reconnectAttempt ici : le handshake TCP réussit même
-      // sur un endpoint qui refuse l'upgrade WS (proxy mal configuré).
-      // On attend le premier message du serveur (event `connected`) pour
-      // considérer la connexion comme vraiment fonctionnelle.
+      // sur un endpoint qui refuse l'upgrade WS. On attend `connected`.
     };
-    this.ws.onmessage = (evt) => {
+    socket.onmessage = (evt) => {
       try {
         const msg = JSON.parse(evt.data) as RealtimeMessage;
         if (msg.event === "connected" && !this.serverHandshakeOk) {
@@ -104,26 +110,28 @@ class BoRealtimeService {
           try {
             l(msg);
           } catch {
-            /* ignore */
+            /* le listener ne doit pas casser le pipeline */
           }
         }
       } catch {
-        /* invalid frame */
+        /* trame invalide */
       }
     };
-    this.ws.onclose = () => {
+    socket.onclose = () => {
       this.stopHeartbeat();
       this.ws = null;
       if (!this.explicitlyClosed) this.scheduleReconnect();
     };
-    this.ws.onerror = () => {
-      // onclose se charge de la reconnexion. Pas de console.error :
-      // le browser logge déjà l'échec de handshake côté Network.
+    socket.onerror = () => {
+      // `onclose` se charge de la reconnexion. Pas de console.error : le
+      // navigateur log déjà l'échec côté Network.
     };
   }
 
+  /** Coupure volontaire (logout / session invalide). Stoppe tout reconnect. */
   disconnect(): void {
     this.explicitlyClosed = true;
+    this.reconnectAttempt = 0;
     this.stopHeartbeat();
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -144,17 +152,21 @@ class BoRealtimeService {
     return () => this.listeners.delete(listener);
   }
 
+  /** Envoie un event au backend (ex. ping applicatif). No-op si pas connecté. */
+  send(event: RealtimeEvent | string, data: Record<string, unknown> = {}): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    try {
+      this.ws.send(JSON.stringify({ event, data }));
+    } catch {
+      /* socket vient peut-être de se fermer : onclose va relancer */
+    }
+  }
+
   private startHeartbeat(): void {
     this.stopHeartbeat();
     this.heartbeatTimer = setInterval(() => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        try {
-          this.ws.send(JSON.stringify({ event: "ping" }));
-        } catch {
-          /* ignore */
-        }
-      }
-    }, 25_000);
+      this.send("ping");
+    }, HEARTBEAT_MS);
   }
 
   private stopHeartbeat(): void {
@@ -164,26 +176,24 @@ class BoRealtimeService {
     }
   }
 
+  /**
+   * Reconnect avec backoff exponentiel borné (1 s → 30 s).
+   * Pas de MAX_ATTEMPTS : le mobile non plus n'en met pas. Si la connexion
+   * n'aboutit jamais, c'est le callsite (logout / changement de session)
+   * qui doit appeler `disconnect()`.
+   */
   private scheduleReconnect(): void {
     if (this.explicitlyClosed) return;
+    if (this.reconnectTimer) return; // un reconnect est déjà planifié
     this.reconnectAttempt += 1;
-    if (this.reconnectAttempt > MAX_RECONNECT_ATTEMPTS) {
-      // Endpoint probablement cassé (proxy WS non configuré ou backend down).
-      // On arrête le spam de tentatives jusqu'à un nouvel appel manuel à
-      // `connect()` (ex. nouvelle navigation).
-      this.givenUp = true;
-      if (typeof console !== "undefined" && console.warn) {
-        console.warn(
-          "[realtime] connection failed after %d attempts — giving up. " +
-            "Check that the backend WebSocket endpoint is reachable through " +
-            "the reverse-proxy (Upgrade + Connection headers must be forwarded).",
-          MAX_RECONNECT_ATTEMPTS,
-        );
-      }
-      return;
-    }
-    const delay = Math.min(1000 * 2 ** (this.reconnectAttempt - 1), 30_000);
-    this.reconnectTimer = setTimeout(() => this.connect(), delay);
+    const delay = Math.min(
+      1000 * 2 ** (this.reconnectAttempt - 1),
+      MAX_BACKOFF_MS,
+    );
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect();
+    }, delay);
   }
 }
 

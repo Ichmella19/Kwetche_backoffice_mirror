@@ -40,6 +40,38 @@ export enum RecouvrementCaseStatus {
   CLOSED = "closed",
 }
 
+export enum RecouvrementStage {
+  N1_AUTO_RELANCE = "n1_auto_relance",
+  N2_FORMAL_NOTICE = "n2_formal_notice",
+  N3_REGISTERED_LETTER = "n3_registered_letter",
+  N4_JUDICIAL = "n4_judicial",
+}
+
+export const RECOUVREMENT_STAGE_LABELS: Record<string, string> = {
+  [RecouvrementStage.N1_AUTO_RELANCE]: "N1 — Relances automatiques",
+  [RecouvrementStage.N2_FORMAL_NOTICE]: "N2 — Mise en demeure",
+  [RecouvrementStage.N3_REGISTERED_LETTER]: "N3 — Lettre recommandée AR",
+  [RecouvrementStage.N4_JUDICIAL]: "N4 — Procédure judiciaire",
+};
+
+export const RECOUVREMENT_STAGE_RANK: Record<RecouvrementStage, number> = {
+  [RecouvrementStage.N1_AUTO_RELANCE]: 1,
+  [RecouvrementStage.N2_FORMAL_NOTICE]: 2,
+  [RecouvrementStage.N3_REGISTERED_LETTER]: 3,
+  [RecouvrementStage.N4_JUDICIAL]: 4,
+};
+
+export function nextRecouvrementStage(
+  current: RecouvrementStage,
+): RecouvrementStage | null {
+  const rank = RECOUVREMENT_STAGE_RANK[current] + 1;
+  const found = (Object.entries(RECOUVREMENT_STAGE_RANK) as [
+    RecouvrementStage,
+    number,
+  ][]).find(([, r]) => r === rank);
+  return found ? found[0] : null;
+}
+
 export enum RecouvrementActionType {
   NOTE = "note",
   CALL = "call",

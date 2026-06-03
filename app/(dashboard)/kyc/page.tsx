@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Ban, CheckCircle2, ShieldCheck, XCircle } from "lucide-react";
+import {
+  Ban,
+  CheckCircle2,
+  FileImage,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import { PageHeader } from "@/presentation/components/shared/page-header";
 import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
@@ -19,12 +25,14 @@ import {
 } from "@/presentation/components/ui/card";
 import { Field } from "@/presentation/components/ui/field";
 import { Input } from "@/presentation/components/ui/input";
+import { Select } from "@/presentation/components/ui/select";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { Textarea } from "@/presentation/components/ui/textarea";
 import { useAsync, useRealtime, useToast } from "@/presentation/hooks";
 import { useAuth } from "@/presentation/contexts/auth-context";
 import { kycService } from "@/presentation/services/kyc";
 import { Grant, Validation, validationLabel } from "@/lib/enums";
+import { fullName } from "@/lib/utils/formatters";
 import { getErrorMessage } from "@/lib/utils/helpers";
 import type {
   KycIdentityPendingResponse,
@@ -92,10 +100,6 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={variant}>{validationLabel(status)}</Badge>;
 }
 
-function fullName(item: KycIdentityReview) {
-  return `${item.first_name} ${item.last_name}`.trim() || "Utilisateur";
-}
-
 function StatusTabs({
   value,
   onChange,
@@ -145,6 +149,12 @@ export default function KycPage() {
   const [maxTontines, setMaxTontines] = useState("");
   const [status, setStatus] = useState("pending");
   const [busy, setBusy] = useState(false);
+  // Demande de pièce complémentaire à un utilisateur dont le dossier est
+  // en attente : tant qu'il n'a pas uploadé, son dossier reste « en attente ».
+  const [requestFor, setRequestFor] = useState<KycIdentityReview | null>(null);
+  const [requestLabel, setRequestLabel] = useState("");
+  const [requestNote, setRequestNote] = useState("");
+  const [requestTargetLevel, setRequestTargetLevel] = useState("1");
 
   const canReview = hasGrant(Grant.KYC_APPROVE);
   const fetchPending = useMemo(
@@ -224,6 +234,38 @@ export default function KycPage() {
     }
   };
 
+  // ── Demande de pièce complémentaire ─────────────────
+  const submitRequest = async () => {
+    if (!requestFor) return;
+    if (requestLabel.trim().length < 3) {
+      toast.error("Libellé requis", "Décrivez la pièce demandée (ex. CIP recto plus lisible).");
+      return;
+    }
+    const level = Number(requestTargetLevel);
+    if (!Number.isFinite(level) || level < 1 || level > 3) {
+      toast.error("Niveau invalide", "Niveau cible 1, 2 ou 3.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await kycService.createRequest({
+        user_id: requestFor.user_id,
+        target_level: level,
+        label: requestLabel,
+        note: requestNote || undefined,
+      });
+      toast.success(
+        "Demande envoyée",
+        "L'utilisateur sera notifié et le dossier reste en attente.",
+      );
+      setRequestFor(null);
+    } catch (err) {
+      toast.error("Action impossible", getErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PER_PAGE));
   const meta = action ? ACTION_META[action] : null;
   const dialogTitle =
@@ -276,7 +318,7 @@ export default function KycPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle>{fullName(item)}</CardTitle>
+                      <CardTitle>{fullName(item.first_name, item.last_name)}</CardTitle>
                       <p className="mt-1 text-sm text-muted">
                         {item.country_code}
                         {item.phone} · NPI {item.npi_number ?? "non renseigné"}
@@ -373,6 +415,20 @@ export default function KycPage() {
                 </CardContent>
                 <CardFooter className="flex-wrap justify-end">
                   <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!canReview}
+                    onClick={() => {
+                      setRequestFor(item);
+                      setRequestLabel("");
+                      setRequestNote("");
+                      setRequestTargetLevel("1");
+                    }}
+                  >
+                    <FileImage />
+                    Demander une photo
+                  </Button>
+                  <Button
                     variant="accent"
                     size="sm"
                     disabled={!canReview}
@@ -454,6 +510,50 @@ export default function KycPage() {
             />
           </Field>
         )}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={!!requestFor}
+        onOpenChange={(open) => !open && setRequestFor(null)}
+        title="Demander une pièce complémentaire"
+        description={
+          requestFor
+            ? `Une notification sera envoyée à l'utilisateur. Tant qu'il n'a pas fourni la pièce, son dossier reste en attente.`
+            : ""
+        }
+        confirmLabel="Envoyer la demande"
+        confirmVariant="accent"
+        isLoading={busy}
+        onConfirm={submitRequest}
+      >
+        <Field label="Libellé de la pièce demandée" required>
+          <Input
+            value={requestLabel}
+            onChange={(e) => setRequestLabel(e.target.value)}
+            placeholder="Ex : CIP recto plus lisible / Selfie en bonne lumière"
+            maxLength={200}
+          />
+        </Field>
+        <Field label="Niveau cible" htmlFor="req-target-level">
+          <Select
+            id="req-target-level"
+            value={requestTargetLevel}
+            options={[
+              { value: "1", label: "Niveau 1 — Identité" },
+              { value: "2", label: "Niveau 2 — Revenus" },
+              { value: "3", label: "Niveau 3 — Banque / garant / Mobile Money" },
+            ]}
+            onChange={(e) => setRequestTargetLevel(e.target.value)}
+          />
+        </Field>
+        <Field label="Note (optionnelle, vue par l'utilisateur)">
+          <Textarea
+            value={requestNote}
+            onChange={(e) => setRequestNote(e.target.value)}
+            placeholder="Ex : votre CIP est floue, merci d'envoyer une photo plus nette en lumière naturelle."
+            maxLength={1000}
+          />
+        </Field>
       </ConfirmDialog>
     </div>
   );

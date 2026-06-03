@@ -16,8 +16,9 @@ interface FieldWithInfoProps {
   label: string;
   htmlFor?: string;
   required?: boolean;
-  /** Texte affiché dans la bulle d'aide au survol / focus de l'icône info. */
-  info: React.ReactNode;
+  /** Texte affiché dans la bulle d'aide au survol / focus de l'icône info.
+   *  Optionnel : sans `info`, l'icône n'est pas rendue. */
+  info?: React.ReactNode;
   error?: string;
   className?: string;
   children: React.ReactNode;
@@ -44,22 +45,24 @@ export function FieldWithInfo({
         <Label htmlFor={htmlFor} required={required}>
           {label}
         </Label>
-        <TooltipProvider delayDuration={150}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={`À propos de ${label}`}
-                className="inline-flex size-4 items-center justify-center rounded-full text-muted transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <Info className="size-3.5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="top" align="start">
-              {info}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {info ? (
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`À propos de ${label}`}
+                  className="inline-flex size-4 items-center justify-center rounded-full text-muted transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Info className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" align="start">
+                {info}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : null}
       </div>
       {children}
       {error && <p className="text-sm text-danger">{error}</p>}

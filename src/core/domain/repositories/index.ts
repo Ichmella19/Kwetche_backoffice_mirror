@@ -9,3 +9,4 @@ export type { ISessionRepository } from "./sessions";
 export type { ISettingsRepository } from "./settings";
 export type { IUserRepository } from "./user";
 export type { IWalletRepository } from "./wallet";
+export type { AnalyticsRangeParams, IDashboardRepository } from "./dashboard";

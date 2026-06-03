@@ -1,5 +1,6 @@
 /**
- * Service Tontine (staff) : CRUD + transitions (publish/start/postpone/cancel/advance).
+ * Service Tontine (staff) : CRUD + transitions (publish/start/postpone/cancel).
+ * L'avancement des cycles est 100 % automatique (scheduler).
  */
 
 import { tontineRepository } from "@/core/data/repositories/tontine";
@@ -8,6 +9,8 @@ import type {
   Tontine,
   TontineDetail,
   TontineListResponse,
+  TontineWithdrawalRequest,
+  UpdateTontineInput,
 } from "@/lib/types";
 
 class TontineService {
@@ -29,6 +32,10 @@ class TontineService {
     return tontineRepository.create(input);
   }
 
+  update(id: string, input: UpdateTontineInput): Promise<Tontine> {
+    return tontineRepository.update(id, input);
+  }
+
   detail(id: string): Promise<TontineDetail> {
     return tontineRepository.detail(id);
   }
@@ -45,12 +52,12 @@ class TontineService {
     return tontineRepository.postpone(id, newStartDate);
   }
 
-  advance(id: string): Promise<Tontine> {
-    return tontineRepository.advance(id);
-  }
-
   cancel(id: string): Promise<Tontine> {
     return tontineRepository.cancel(id);
+  }
+
+  listWithdrawals(id: string): Promise<TontineWithdrawalRequest[]> {
+    return tontineRepository.listWithdrawals(id);
   }
 }
 

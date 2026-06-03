@@ -1,8 +1,8 @@
 # Plateforme tontine — Spécifications fonctionnelles MVP
 
 **Document de référence consolidé**
-**Version 1.2**
-**Date : 30 mai 2026**
+**Version 1.3**
+**Date : 1er juin 2026**
 
 ---
 
@@ -226,25 +226,30 @@ Tous ces paramètres sont affichés clairement à tout candidat avant souscripti
 
 ### 5.3 Cycle de vie
 
-**Phase 1 — Constitution (anonyme)**
+**Phase 1 — Constitution (anonyme, modèle hybride)**
 1. Création et publication de la tontine par l'admin
 2. Tontine listée dans le catalogue public, visible aux utilisateurs au niveau KYC requis
-3. Inscription des participants (« premier arrivé, premier servi ») — à l'inscription, **deux prélèvements immédiats** sur le wallet :
-   - la **caution** (bloquée), si elle est > 0
-   - la **1ère cotisation**, transférée à la plateforme en escrow
-   Si le wallet ne couvre pas le total, l'inscription est refusée.
-4. L'inscription est également refusée si l'utilisateur a une **dette ouverte** ou a atteint son **nombre maximum de tontines simultanées**
+3. Inscription des participants (« premier arrivé, premier servi ») — à l'inscription, **seule la caution est prélevée et bloquée immédiatement** (preuve d'engagement, équivalent du contrat signé). La 1ère cotisation **n'est pas encore débitée**.
+4. L'inscription est refusée si :
+   - le wallet ne couvre pas la caution
+   - l'utilisateur a une **dette ouverte** ou un dossier de recouvrement actif
+   - l'utilisateur a atteint son **nombre maximum de tontines simultanées**
 5. Tant que la tontine n'est pas complète, elle reste en phase de constitution
 
 **Désistement avant démarrage** :
-- **En dehors de la fenêtre de désistement** : caution intégralement débloquée + 1ère cotisation intégralement remboursée
-- **À l'intérieur de la fenêtre** : une partie de la caution (taux paramétré) est retenue et reversée au fond de réserve de la tontine ; la 1ère cotisation reste intégralement remboursée
+- **En dehors de la fenêtre de désistement** : caution intégralement débloquée
+- **À l'intérieur de la fenêtre** : une partie de la caution (taux paramétré) est retenue et reversée au fond de réserve de la tontine
 
 **Après démarrage** : le désistement n'est plus possible. L'utilisateur doit aller jusqu'au bout (ou subir le mécanisme de défaut, cf. § 5.4).
 
 **Phase 2 — Démarrage**
 - À la **date de démarrage**, si le quota d'inscrits est atteint, le système démarre la tontine automatiquement et notifie tous les souscripteurs
-- **Sinon, la tontine bascule dans une file « à démarrer »** au back-office. L'admin tranche : démarrer quand même avec les inscrits, reporter la date de démarrage, ou annuler (annulation = caution débloquée et 1ère cotisation remboursée pour tous)
+- **Sinon, la tontine bascule dans une file « à démarrer »** au back-office. L'admin tranche : démarrer quand même avec les inscrits, reporter la date de démarrage, ou annuler (annulation = caution débloquée pour tous)
+
+**Prélèvement de la 1ère cotisation au démarrage** :
+- À l'instant du démarrage, le système **tente immédiatement** de prélever la 1ère cotisation de chaque membre actif.
+- **Membre solvable** : prélèvement effectué, cotisation du cycle 1 marquée comme payée. ✅
+- **Membre insolvable** : un **délai de grâce paramétrable** (par défaut **2 jours**) lui est accordé. Pendant ces 2 jours, l'utilisateur peut approvisionner son wallet par mobile money ou virement. À l'expiration du délai, si la cotisation n'est toujours pas réglée, **une dette est ouverte** (cf. § 8.7 Recouvrement). La dette peut courir 1, 2, 6, n mois — l'utilisateur peut continuer à participer aux cycles suivants, **mais il ne touchera pas sa cagnotte le jour de son tour tant que la dette n'est pas réglée**.
 
 **Phase 3 — Cycles de cotisation**
 1. **Cycle 1 — Constitution du fond de réserve** : les cotisations de tous les participants sont collectées et versées dans le fond de réserve interne de la tontine. Aucun tirage au sort n'est effectué à ce cycle. Aucune information spécifique n'est communiquée aux participants sur la nature de ce cycle.
@@ -638,27 +643,32 @@ Pour les retraits : **OTP + biométrie** (double facteur).
 
 Le **système classe automatiquement** chaque notification selon sa nature et choisit les canaux. L'utilisateur ne configure pas la criticité, il configure ses adresses (téléphone, email).
 
+**Principe de coût** : **le SMS est strictement réservé aux notifications critiques** (sécurité / accès au compte). Toutes les autres communications passent par **push + email** afin de minimiser les frais opérateur SMS (Africa's Talking, etc.). Le canal SMS reste activable manuellement depuis le BO pour un envoi ciblé, mais jamais en automatique sur les flows non critiques.
+
 ### 10.2 Niveau critique — SMS + Email obligatoire
 
 Non désactivable. Push et in-app en complément.
 
 - OTP de retrait, recharge, virement, paiement de prêt
-- Validation ou refus de KYC par agent BO
-- Gel ou levée de gel du wallet
+- OTP de login et de vérification de compte
 - Détection de connexion suspecte ou fraude
-- Échec de prélèvement avec demande d'action urgente
+- Gel ou levée de gel du wallet
 - Saisine d'une autorité externe
 
-### 10.3 Niveau important — SMS ou Email selon configuration
+### 10.3 Niveau important — Email + push (pas de SMS automatique)
 
-Plus push et in-app systématique.
+Plus in-app systématique. SMS désactivé par défaut pour économies.
 
+- Validation ou refus de KYC par agent BO
+- Demande agent de pièce KYC complémentaire
+- Échec de prélèvement avec demande d'action urgente
 - Confirmation de recharge ou retrait effectué
 - Cagnotte de tontine reçue
 - Octroi de prêt et déblocage des fonds
 - Échéance de cotisation honorée ou prêt remboursé
 - Reçus et justificatifs disponibles
 - Réponse à un ticket de litige
+- **Relances de recouvrement automatiques** (auparavant push+SMS, désormais **push+email**)
 
 ### 10.4 Niveau confort — Push et in-app uniquement
 
@@ -728,6 +738,12 @@ Chaque rôle dispose d'une vue dédiée à ses tâches :
 - Inscription : téléphone + OTP + mot de passe fort
 - Connexion : mot de passe + OTP au premier accès depuis un nouvel appareil
 - Actions sensibles : OTP + biométrie (retraits, demandes de prêt, modification KYC)
+
+**Anti-brute-force sur tous les codes courts** (OTP login, code de vérification de compte, code de reset password) :
+- Compteur d'essais ratés partagé entre les 3 codes (un attaquant ne peut pas contourner en alternant les types)
+- Au-delà de **5 essais consécutifs ratés**, le compte est **verrouillé pendant 15 minutes** : tout code en cours est purgé, le user doit refaire une demande après expiration du verrou
+- Verrou et compteur réinitialisés automatiquement à la première saisie correcte
+- Logué côté audit ; un verrou répétitif déclenche une alerte BO pour investigation
 
 ### 12.2 Anti-fraude continu
 
@@ -800,7 +816,9 @@ XAF, Naira, Yen, Rouble, Dollar, Euro avec conversion via API de change professi
 | **KYC** | Know Your Customer, processus de vérification d'identité |
 | **Wallet** | Compte interne en XOF de l'utilisateur sur la plateforme |
 | **Caution** | Somme bloquée à la souscription d'une tontine, garantissant l'engagement |
-| **Première cotisation** | Cotisation du tout premier cycle de l'utilisateur, prélevée immédiatement à l'inscription en plus de la caution (mécanique « premier arrivé, premier servi ») |
+| **Première cotisation** | Cotisation du tout premier cycle de l'utilisateur. **Modèle hybride** : la caution est bloquée à l'inscription (preuve d'engagement) ; la 1ère cotisation est prélevée **au démarrage** de la tontine. Si l'utilisateur n'a pas le solde au démarrage, un délai de grâce paramétrable lui est accordé avant ouverture d'une dette. |
+| **Délai de grâce 1ère cotisation** | Nombre de jours (défaut 2) pendant lesquels un nouvel inscrit peut approvisionner son wallet pour régler sa 1ère cotisation après le démarrage. Au-delà, une dette est ouverte ; l'utilisateur participe aux cycles suivants mais ne reçoit pas sa cagnotte tant que la dette n'est pas réglée. |
+| **Verrou anti-brute-force** | Blocage temporaire de 15 minutes appliqué au compte après 5 essais ratés sur un code court (OTP login, code de vérification, code de reset). Partagé entre les 3 codes ; réinitialisé après une saisie correcte. |
 | **Cycle** | Période entre deux versements de cagnotte dans une tontine |
 | **Cagnotte** | Somme collectée à un cycle, versée au gagnant tiré au sort |
 | **Mode de tirage** | Façon dont les bénéficiaires d'une tontine rotative sont désignés : *révélé* (ordre fixe affiché à tous d'avance) ou *aléatoire à chaque tour* |

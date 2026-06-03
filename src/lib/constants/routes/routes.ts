@@ -4,6 +4,7 @@ export const ROUTES = {
   RESET_PASSWORD: "/reset-password",
 
   DASHBOARD: "/dashboard",
+  ANALYTICS: "/analytics",
   KYC: "/kyc",
   KYC_DOCUMENTS: "/kyc/documents",
   USERS: "/users",
@@ -12,6 +13,7 @@ export const ROUTES = {
   TONTINES: "/tontines",
   TONTINE_NEW: "/tontines/new",
   RECOUVREMENT: "/recouvrement",
+  SUPPORT: "/support",
   SETTINGS: "/settings",
   PROFILE: "/profile",
 } as const;

@@ -34,6 +34,7 @@ export interface RecouvrementCase {
   debt_id: string;
   user_id: string;
   status: string;
+  current_stage: string;
   assigned_agent_id: string | null;
   amount_target: number;
   amount_recovered: number;
@@ -41,6 +42,26 @@ export interface RecouvrementCase {
   assigned_at: string | null;
   resolved_at: string | null;
   resolution_note: string | null;
+}
+
+export interface RecouvrementStageEvent {
+  id: string;
+  case_id: string;
+  from_stage: string | null;
+  to_stage: string;
+  triggered_by: string | null;
+  is_automatic: boolean;
+  evidence_url: string | null;
+  reference: string | null;
+  note: string | null;
+  created_at: string | null;
+}
+
+export interface AdvanceStageInput {
+  target_stage: string;
+  evidence_url?: string | null;
+  reference?: string | null;
+  note?: string | null;
 }
 
 export interface RecouvrementAction {
@@ -65,6 +86,7 @@ export interface RecouvrementCaseDetail {
   debt: Debt | null;
   relances: Relance[];
   actions: RecouvrementAction[];
+  stage_events: RecouvrementStageEvent[];
 }
 
 export interface AddRecouvrementActionInput {

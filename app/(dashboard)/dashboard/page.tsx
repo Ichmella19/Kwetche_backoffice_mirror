@@ -55,7 +55,7 @@ export default function DashboardPage() {
     isLoading: seriesLoading,
     execute: reloadSeries,
   } = useAsync<DashboardTimeseries>(
-    useCallback(() => dashboardService.getTimeseries(30), []),
+    useCallback(() => dashboardService.getTimeseries({ days: 30 }), []),
   );
 
   // Refresh live sur les events qui font bouger les KPIs.

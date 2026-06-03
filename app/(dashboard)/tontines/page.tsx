@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/presentation/components/ui/table";
-import { useAsync, useDebounce } from "@/presentation/hooks";
+import { useAsync, useDebounce, useRealtime } from "@/presentation/hooks";
 import { tontineService } from "@/presentation/services/tontine";
 import { ROUTES } from "@/lib/constants";
 import {
@@ -33,6 +33,7 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { getErrorMessage } from "@/lib/utils/helpers";
 import type { TontineListResponse } from "@/lib/types";
+import type { BadgeProps } from "@/presentation/components/ui/badge";
 
 const PER_PAGE = 20;
 
@@ -44,14 +45,31 @@ const STATUS_FILTER_OPTIONS = [
   })),
 ];
 
-function statusVariant(status: string): "secondary" | "danger" | "neutral" {
-  if (status === TontineStatus.ACTIVE) return "secondary";
-  if (
-    status === TontineStatus.CANCELLED ||
-    status === TontineStatus.PENDING_START
-  )
-    return "danger";
-  return "neutral";
+const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
+  [TontineStatus.DRAFT]: "neutral",
+  [TontineStatus.OPEN]: "info",
+  [TontineStatus.PENDING_START]: "warning",
+  [TontineStatus.ACTIVE]: "success",
+  [TontineStatus.COMPLETED]: "secondary",
+  [TontineStatus.CANCELLED]: "danger",
+};
+
+function FillBar({ count, max }: { count: number; max: number }) {
+  const percent = max ? Math.min(100, Math.round((count / max) * 100)) : 0;
+  const full = percent >= 100;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted-soft">
+        <div
+          className={`h-full rounded-full ${full ? "bg-accent" : "bg-primary"}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <span className="text-xs tabular-nums text-muted">
+        {count}/{max}
+      </span>
+    </div>
+  );
 }
 
 export default function TontinesPage() {
@@ -72,6 +90,11 @@ export default function TontinesPage() {
   );
   const { data, isLoading, error, execute } =
     useAsync<TontineListResponse>(fetchTontines);
+
+  // Refresh live à chaque changement de statut / inscription / désistement.
+  useRealtime(["tontine.updated"], () => {
+    void execute();
+  });
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil((data?.total ?? 0) / PER_PAGE)),
@@ -161,13 +184,16 @@ export default function TontinesPage() {
                       {TONTINE_FREQUENCY_LABELS[t.frequency] ?? t.frequency}
                     </TableCell>
                     <TableCell>
-                      {t.member_count ?? 0}/{t.max_members}
+                      <FillBar
+                        count={t.member_count ?? 0}
+                        max={t.max_members}
+                      />
                     </TableCell>
                     <TableCell className="text-xs">
                       {formatDate(t.start_date)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(t.status)}>
+                      <Badge variant={STATUS_VARIANT[t.status] ?? "neutral"}>
                         {TONTINE_STATUS_LABELS[t.status] ?? t.status}
                       </Badge>
                     </TableCell>

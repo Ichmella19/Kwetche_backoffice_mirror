@@ -8,6 +8,7 @@ import type {
   AdminUpdateUserInput,
   RevokeOtherSessionsResult,
   User,
+  UserAnalytics,
   UserListResponse,
   UserSession,
 } from "@/lib/types";
@@ -86,6 +87,13 @@ class UserService {
 
   listUserDebts(userId: string) {
     return userRepository.listUserDebts(userId);
+  }
+
+  userAnalytics(
+    userId: string,
+    params: { days?: number; startDate?: string; endDate?: string } = {},
+  ): Promise<UserAnalytics> {
+    return userRepository.userAnalytics(userId, params);
   }
 }
 

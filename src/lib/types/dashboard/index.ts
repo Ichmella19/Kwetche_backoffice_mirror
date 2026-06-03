@@ -5,6 +5,8 @@ export type {
   RecouvrementStats,
   TimeseriesPoint,
   TontinesStats,
+  UserAnalytics,
+  UserAnalyticsActivity,
   UserStats,
   WalletStats,
 } from "./dashboard";

@@ -45,10 +45,6 @@ class RecouvrementService {
   writeOff(caseId: string, input: ResolveCaseInput): Promise<RecouvrementCase> {
     return recouvrementRepository.writeOff(caseId, input);
   }
-
-  releaseMember(memberId: string) {
-    return recouvrementRepository.releaseMember(memberId);
-  }
 }
 
 export const recouvrementService = new RecouvrementService();

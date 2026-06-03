@@ -14,6 +14,7 @@ export interface Tontine {
   description: string | null;
   created_by: string | null;
   reserve_fund: number;
+  caution_fund: number;
   platform_takes_first_round: boolean;
   loyalty_bonus_enabled: boolean;
   loyalty_bonus_rate: number;
@@ -78,6 +79,7 @@ export interface TontineDetail {
   tontine: Tontine;
   members: TontineMember[];
   cycles: TontineCycle[];
+  payouts?: TontinePayout[];
 }
 
 export interface TontineListResponse {
@@ -105,4 +107,34 @@ export interface CreateTontineInput {
   loyalty_bonus_enabled: boolean;
   loyalty_bonus_rate: number;
   description?: string | null;
+}
+
+/**
+ * Édition d'une tontine en `draft`. Tous les champs sont optionnels :
+ * seuls ceux fournis sont modifiés côté backend.
+ */
+export type UpdateTontineInput = Partial<CreateTontineInput>;
+
+export interface TontineWithdrawalRequestUserMini {
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  country_code: string | null;
+  email: string | null;
+}
+
+export interface TontineWithdrawalRequest {
+  id: string;
+  tontine_id: string;
+  user_id: string;
+  member_id: string;
+  reason: string;
+  supporting_document_url: string | null;
+  caution_amount: number;
+  penalty_amount: number;
+  refunded_amount: number;
+  in_penalty_window: boolean;
+  created_at: string | null;
+  user?: TontineWithdrawalRequestUserMini | null;
 }

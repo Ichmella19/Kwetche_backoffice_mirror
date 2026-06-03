@@ -15,6 +15,8 @@ export interface User {
   role: string;
   is_admin: boolean;
   grants: string[];
+  manager_id: string | null;
+  team_name: string | null;
   kyc_level: number;
   kyc_updated_at: string | null;
   npi_number: string | null;

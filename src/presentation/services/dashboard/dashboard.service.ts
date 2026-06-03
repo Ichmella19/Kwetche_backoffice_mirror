@@ -4,6 +4,7 @@
  */
 
 import { dashboardRepository } from "@/core/data/repositories";
+import type { AnalyticsRangeParams } from "@/core/domain/repositories/dashboard";
 import type { DashboardStats, DashboardTimeseries } from "@/lib/types";
 
 class DashboardService {
@@ -11,8 +12,8 @@ class DashboardService {
     return dashboardRepository.stats();
   }
 
-  getTimeseries(days = 30): Promise<DashboardTimeseries> {
-    return dashboardRepository.timeseries(days);
+  getTimeseries(params: AnalyticsRangeParams = { days: 30 }): Promise<DashboardTimeseries> {
+    return dashboardRepository.timeseries(params);
   }
 }
 

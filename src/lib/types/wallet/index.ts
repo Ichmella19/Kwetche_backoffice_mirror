@@ -5,4 +5,8 @@ export type {
   WalletUserView,
   AdjustWalletInput,
   WalletListResponse,
+  PlatformWallet,
+  PlatformWalletTransaction,
+  PlatformWalletTransactionsResponse,
+  PlatformWalletMovementInput,
 } from "./wallet";

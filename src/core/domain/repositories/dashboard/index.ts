@@ -1,1 +1,4 @@
-export type { IDashboardRepository } from "./dashboard.repository";
+export type {
+  AnalyticsRangeParams,
+  IDashboardRepository,
+} from "./dashboard.repository";

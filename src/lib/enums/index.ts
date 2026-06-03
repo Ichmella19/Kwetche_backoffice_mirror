@@ -21,12 +21,23 @@ export {
 export {
   WalletMovement,
   WalletTxStatus,
+  PaymentProviderType,
+  PlatformAccount,
+  PlatformMovement,
   WALLET_TX_STATUS_LABELS,
   WALLET_TX_CATEGORY_LABELS,
   WALLET_STATUS_LABELS,
+  PAYMENT_PROVIDER_LABELS,
+  PLATFORM_ACCOUNT_LABELS,
+  PLATFORM_MOVEMENT_LABELS,
 } from "./wallet/wallet";
 export { SettingValueType } from "./settings/value-type";
 export { ErrorReason } from "./reasons/reasons";
+export {
+  AnalyticsPeriod,
+  ANALYTICS_PERIOD_DAYS,
+  ANALYTICS_PERIOD_LABELS,
+} from "./analytics/analytics";
 export {
   TontineType,
   TontineDrawMode,
@@ -52,10 +63,20 @@ export {
   RelanceStatus,
   RecouvrementCaseStatus,
   RecouvrementActionType,
+  RecouvrementStage,
   DEBT_TYPE_LABELS,
   DEBT_STATUS_LABELS,
   RELANCE_CHANNEL_LABELS,
   RELANCE_STATUS_LABELS,
   RECOUVREMENT_CASE_STATUS_LABELS,
   RECOUVREMENT_ACTION_TYPE_LABELS,
+  RECOUVREMENT_STAGE_LABELS,
+  RECOUVREMENT_STAGE_RANK,
+  nextRecouvrementStage,
 } from "./recouvrement/recouvrement";
+export {
+  SupportTicketStatus,
+  SupportTicketCategory,
+  SUPPORT_STATUS_LABELS,
+  SUPPORT_CATEGORY_LABELS,
+} from "./support/support";

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  LifeBuoy,
+  LineChart,
   PiggyBank,
   Scale,
   Shield,
@@ -29,6 +31,7 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: "Tableau de bord", href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+  { label: "Analytics", href: ROUTES.ANALYTICS, icon: LineChart },
   {
     label: "Utilisateurs",
     href: ROUTES.USERS,
@@ -64,6 +67,12 @@ const NAV: NavItem[] = [
     href: ROUTES.RECOUVREMENT,
     icon: Scale,
     grant: Grant.RECOUVREMENT_READ,
+  },
+  {
+    label: "Support",
+    href: ROUTES.SUPPORT,
+    icon: LifeBuoy,
+    grant: Grant.SUPPORT_READ,
   },
   {
     label: "Paramètres",

@@ -1,5 +1,8 @@
 import { httpService } from "@/core/data/http.service";
-import type { IDashboardRepository } from "@/core/domain/repositories/dashboard";
+import type {
+  AnalyticsRangeParams,
+  IDashboardRepository,
+} from "@/core/domain/repositories/dashboard";
 import type { DashboardStats, DashboardTimeseries } from "@/lib/types";
 
 export class DashboardRepository implements IDashboardRepository {
@@ -7,9 +10,14 @@ export class DashboardRepository implements IDashboardRepository {
     return httpService.get<DashboardStats>("/admin/dashboard/stats");
   }
 
-  timeseries(days: number): Promise<DashboardTimeseries> {
+  timeseries(params: AnalyticsRangeParams = {}): Promise<DashboardTimeseries> {
     return httpService.get<DashboardTimeseries>("/admin/dashboard/timeseries", {
-      query: { days },
+      query: {
+        days: params.days,
+        start_date: params.startDate,
+        end_date: params.endDate,
+        user_id: params.userId,
+      },
     });
   }
 }

@@ -12,6 +12,8 @@ export type {
   RecouvrementStats,
   TimeseriesPoint,
   TontinesStats,
+  UserAnalytics,
+  UserAnalyticsActivity,
   UserStats,
   WalletStats,
 } from "./dashboard";
@@ -35,6 +37,10 @@ export type {
   WalletUserView,
   AdjustWalletInput,
   WalletListResponse,
+  PlatformWallet,
+  PlatformWalletTransaction,
+  PlatformWalletTransactionsResponse,
+  PlatformWalletMovementInput,
 } from "./wallet";
 export type { AppSetting } from "./settings";
 export type { RevokeOtherSessionsResult, UserSession } from "./sessions";
@@ -53,14 +59,28 @@ export type {
   TontineDetail,
   TontineListResponse,
   CreateTontineInput,
+  UpdateTontineInput,
+  TontineWithdrawalRequest,
+  TontineWithdrawalRequestUserMini,
 } from "./tontine/tontine";
 export type {
   Debt,
   Relance,
   RecouvrementCase,
   RecouvrementAction,
+  RecouvrementStageEvent,
   RecouvrementCaseListResponse,
   RecouvrementCaseDetail,
   AddRecouvrementActionInput,
+  AdvanceStageInput,
   ResolveCaseInput,
 } from "./recouvrement/recouvrement";
+export type {
+  SupportTicket,
+  SupportTicketUserMini,
+  SupportTicketListResponse,
+  SupportAttachment,
+  SupportMessage,
+  SupportTicketThread,
+  UpdateSupportStatusInput,
+} from "./support";

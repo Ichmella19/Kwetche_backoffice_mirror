@@ -5,7 +5,6 @@ import type {
   RecouvrementCaseDetail,
   RecouvrementCaseListResponse,
   ResolveCaseInput,
-  TontineMember,
 } from "@/lib/types";
 
 export interface IRecouvrementRepository {
@@ -23,5 +22,4 @@ export interface IRecouvrementRepository {
   ): Promise<{ action: RecouvrementAction; case: RecouvrementCase }>;
   resolve(caseId: string, input: ResolveCaseInput): Promise<RecouvrementCase>;
   writeOff(caseId: string, input: ResolveCaseInput): Promise<RecouvrementCase>;
-  releaseMember(memberId: string): Promise<TontineMember>;
 }

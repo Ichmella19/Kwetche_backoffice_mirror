@@ -53,6 +53,7 @@ export enum ContributionStatus {
 export enum TontinePayoutStatus {
   SCHEDULED = "scheduled",
   PENDING_VALIDATION = "pending_validation",
+  PENDING_DEBT_RESOLUTION = "pending_debt_resolution",
   PAID = "paid",
   SUSPENDED = "suspended",
   CANCELLED = "cancelled",
@@ -109,6 +110,7 @@ export const CONTRIBUTION_STATUS_LABELS: Record<string, string> = {
 export const TONTINE_PAYOUT_STATUS_LABELS: Record<string, string> = {
   [TontinePayoutStatus.SCHEDULED]: "Programmé",
   [TontinePayoutStatus.PENDING_VALIDATION]: "À valider",
+  [TontinePayoutStatus.PENDING_DEBT_RESOLUTION]: "En attente (dette à régler)",
   [TontinePayoutStatus.PAID]: "Versé",
   [TontinePayoutStatus.SUSPENDED]: "Suspendu",
   [TontinePayoutStatus.CANCELLED]: "Annulé",

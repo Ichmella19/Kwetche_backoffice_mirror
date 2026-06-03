@@ -55,3 +55,43 @@ export interface WalletListResponse {
   page: number;
   per_page: number;
 }
+
+export interface PlatformWallet {
+  id: string;
+  purpose: string;
+  label: string;
+  balance: number;
+  currency: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface PlatformWalletTransaction {
+  id: string;
+  platform_wallet_id: string;
+  purpose: string;
+  movement: "credit" | "debit";
+  amount: number;
+  balance_after: number;
+  related_type: string | null;
+  related_id: string | null;
+  description: string | null;
+  performed_by: string | null;
+  is_automatic: boolean;
+  created_at: string | null;
+}
+
+export interface PlatformWalletTransactionsResponse {
+  wallet: PlatformWallet;
+  items: PlatformWalletTransaction[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface PlatformWalletMovementInput {
+  amount: number;
+  description: string;
+  related_type?: string | null;
+  related_id?: string | null;
+}

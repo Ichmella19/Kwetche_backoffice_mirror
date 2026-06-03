@@ -9,6 +9,7 @@ import type {
   TontineMember,
   Tontine,
   User,
+  UserAnalytics,
   UserListResponse,
   UserSession,
 } from "@/lib/types";
@@ -113,6 +114,19 @@ export class UserRepository implements IUserRepository {
 
   listUserDebts(userId: string): Promise<UserDebtsResponse> {
     return httpService.get<UserDebtsResponse>(`/admin/users/${userId}/debts`);
+  }
+
+  userAnalytics(
+    userId: string,
+    params: { days?: number; startDate?: string; endDate?: string } = {},
+  ): Promise<UserAnalytics> {
+    return httpService.get<UserAnalytics>(`/admin/users/${userId}/analytics`, {
+      query: {
+        days: params.days,
+        start_date: params.startDate,
+        end_date: params.endDate,
+      },
+    });
   }
 }
 
