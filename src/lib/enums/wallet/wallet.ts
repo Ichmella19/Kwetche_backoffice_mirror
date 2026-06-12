@@ -55,22 +55,20 @@ export const PAYMENT_PROVIDER_LABELS: Record<string, string> = {
   [PaymentProviderType.CARD]: "Carte bancaire",
 };
 
+// Comptes « maison » globaux. Réserve / cautions / bonus ne sont PLUS
+// globaux — ils vivent par tontine (cf. comptes internes de chaque tontine).
 export enum PlatformAccount {
-  TONTINES_RESERVE = "tontines_reserve",
   LOANS = "loans",
   EARNINGS = "earnings",
   OPERATIONAL = "operational",
-  CAUTIONS = "cautions",
-  BONUS_POOL = "bonus_pool",
+  TONTINES_IMPAYES = "tontines_impayes",
 }
 
 export const PLATFORM_ACCOUNT_LABELS: Record<string, string> = {
-  [PlatformAccount.TONTINES_RESERVE]: "Réserve tontines",
   [PlatformAccount.LOANS]: "Prêts",
   [PlatformAccount.EARNINGS]: "Gains plateforme",
   [PlatformAccount.OPERATIONAL]: "Trésorerie opérationnelle",
-  [PlatformAccount.CAUTIONS]: "Cautions retenues",
-  [PlatformAccount.BONUS_POOL]: "Pool de fidélité",
+  [PlatformAccount.TONTINES_IMPAYES]: "Pertes impayées",
 };
 
 export enum PlatformMovement {

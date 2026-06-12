@@ -7,10 +7,14 @@ import { PageHeader } from "@/presentation/components/shared/page-header";
 import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { Pagination } from "@/presentation/components/shared/pagination";
+import {
+  AdvancedFilters,
+  type FilterField,
+  type FilterValues,
+} from "@/presentation/components/shared/advanced-filters";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
-import { Select } from "@/presentation/components/ui/select";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import {
   Table,
@@ -34,19 +38,49 @@ import { getErrorMessage } from "@/lib/utils/helpers";
 import type { SupportTicketListResponse } from "@/lib/types";
 
 const PER_PAGE = 20;
-const STATUS_OPTIONS = [
-  { value: "", label: "Tous" },
-  ...Object.values(SupportTicketStatus).map((v) => ({
-    value: v,
-    label: SUPPORT_STATUS_LABELS[v] ?? v,
-  })),
-];
-const CATEGORY_OPTIONS = [
-  { value: "", label: "Toutes" },
-  ...Object.values(SupportTicketCategory).map((v) => ({
-    value: v,
-    label: SUPPORT_CATEGORY_LABELS[v] ?? v,
-  })),
+
+const SUPPORT_FILTERS: FilterField[] = [
+  {
+    kind: "text",
+    key: "search",
+    label: "Recherche",
+    placeholder: "Sujet du ticket…",
+  },
+  {
+    kind: "multi",
+    key: "statuses",
+    label: "Statuts",
+    options: Object.values(SupportTicketStatus).map((v) => ({
+      value: v,
+      label: SUPPORT_STATUS_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "multi",
+    key: "categories",
+    label: "Catégories",
+    options: Object.values(SupportTicketCategory).map((v) => ({
+      value: v,
+      label: SUPPORT_CATEGORY_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "date-range",
+    key: "created",
+    label: "Date de création",
+  },
+  {
+    kind: "select",
+    key: "sort",
+    label: "Tri",
+    placeholder: "Dernier message (récent)",
+    options: [
+      { value: "last_message_desc", label: "Dernier message (récent)" },
+      { value: "last_message_asc", label: "Dernier message (ancien)" },
+      { value: "created_desc", label: "Création (récent)" },
+      { value: "created_asc", label: "Création (ancien)" },
+    ],
+  },
 ];
 
 function variantOf(status: string): "secondary" | "danger" | "neutral" {
@@ -57,23 +91,29 @@ function variantOf(status: string): "secondary" | "danger" | "neutral" {
 
 export default function SupportListPage() {
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
-  const [category, setCategory] = useState("");
+  const [values, setValues] = useState<FilterValues>({});
 
-  const fetchTickets = useCallback(
-    () =>
-      supportService.list({
-        page,
-        perPage: PER_PAGE,
-        status: status || undefined,
-        category: category || undefined,
-      }),
-    [page, status, category],
-  );
+  const fetchTickets = useCallback(() => {
+    const v = values;
+    const asStr = (k: string) =>
+      typeof v[k] === "string" ? (v[k] as string) : undefined;
+    const asArr = (k: string) =>
+      Array.isArray(v[k]) ? (v[k] as string[]) : undefined;
+    return supportService.list({
+      page,
+      perPage: PER_PAGE,
+      search: asStr("search"),
+      statuses: asArr("statuses"),
+      categories: asArr("categories"),
+      createdFrom: asStr("created_from"),
+      createdTo: asStr("created_to"),
+      sort: asStr("sort"),
+    });
+  }, [page, values]);
+
   const { data, isLoading, error, execute } =
     useAsync<SupportTicketListResponse>(fetchTickets);
 
-  // Refresh live : nouveau ticket ou MAJ via realtime admin.
   useRealtime(
     ["support.ticket.created", "support.ticket.updated"],
     () => {
@@ -93,33 +133,12 @@ export default function SupportListPage() {
         description="Demandes envoyées par les utilisateurs depuis l'application."
       />
 
-      <Card>
-        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
-          <Select
-            value={status}
-            options={STATUS_OPTIONS}
-            onChange={(e) => {
-              setPage(1);
-              setStatus(e.target.value);
-            }}
-            aria-label="Filtrer par statut"
-          />
-          <Select
-            value={category}
-            options={CATEGORY_OPTIONS}
-            onChange={(e) => {
-              setPage(1);
-              setCategory(e.target.value);
-            }}
-            aria-label="Filtrer par catégorie"
-          />
-          <div className="flex items-center justify-end">
-            <span className="text-sm text-muted-foreground">
-              {data ? `${data.total} ticket(s)` : ""}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+      <AdvancedFilters
+        fields={SUPPORT_FILTERS}
+        onApply={setValues}
+        onPageReset={() => setPage(1)}
+        collapsible
+      />
 
       {error ? (
         <ErrorState
@@ -138,7 +157,7 @@ export default function SupportListPage() {
       ) : !data || data.items.length === 0 ? (
         <EmptyState
           title="Aucun ticket"
-          description="Les demandes des utilisateurs apparaîtront ici."
+          description="Aucun ticket ne correspond à ces filtres."
         />
       ) : (
         <Card>
@@ -150,7 +169,7 @@ export default function SupportListPage() {
                   <TableHead>Utilisateur</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Créé le</TableHead>
+                  <TableHead>Dernier message</TableHead>
                   <TableHead className="w-20" />
                 </TableRow>
               </TableHeader>

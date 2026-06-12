@@ -2,6 +2,7 @@ export type {
   Wallet,
   WalletOwner,
   WalletTransaction,
+  WalletTransactionsResponse,
   WalletUserView,
   AdjustWalletInput,
   WalletListResponse,

@@ -2,16 +2,19 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Plus, Search } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { PageHeader } from "@/presentation/components/shared/page-header";
 import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { Pagination } from "@/presentation/components/shared/pagination";
+import {
+  AdvancedFilters,
+  type FilterField,
+  type FilterValues,
+} from "@/presentation/components/shared/advanced-filters";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
-import { Input } from "@/presentation/components/ui/input";
-import { Select } from "@/presentation/components/ui/select";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import {
   Table,
@@ -21,14 +24,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/presentation/components/ui/table";
-import { useAsync, useDebounce, useRealtime } from "@/presentation/hooks";
+import { useAsync, useRealtime } from "@/presentation/hooks";
 import { tontineService } from "@/presentation/services/tontine";
 import { ROUTES } from "@/lib/constants";
 import {
+  TONTINE_DRAW_MODE_LABELS,
   TONTINE_FREQUENCY_LABELS,
   TONTINE_STATUS_LABELS,
   TONTINE_TYPE_LABELS,
+  TontineDrawMode,
+  TontineFrequency,
   TontineStatus,
+  TontineType,
 } from "@/lib/enums";
 import { formatCurrency, formatDate } from "@/lib/utils/formatters";
 import { getErrorMessage } from "@/lib/utils/helpers";
@@ -36,14 +43,6 @@ import type { TontineListResponse } from "@/lib/types";
 import type { BadgeProps } from "@/presentation/components/ui/badge";
 
 const PER_PAGE = 20;
-
-const STATUS_FILTER_OPTIONS = [
-  { value: "", label: "Tous les statuts" },
-  ...Object.values(TontineStatus).map((value) => ({
-    value,
-    label: TONTINE_STATUS_LABELS[value] ?? value,
-  })),
-];
 
 const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
   [TontineStatus.DRAFT]: "neutral",
@@ -53,6 +52,70 @@ const STATUS_VARIANT: Record<string, BadgeProps["variant"]> = {
   [TontineStatus.COMPLETED]: "secondary",
   [TontineStatus.CANCELLED]: "danger",
 };
+
+const TONTINE_FILTERS: FilterField[] = [
+  {
+    kind: "text",
+    key: "search",
+    label: "Recherche",
+    placeholder: "Nom de la tontine…",
+  },
+  {
+    kind: "multi",
+    key: "statuses",
+    label: "Statuts",
+    options: Object.values(TontineStatus).map((v) => ({
+      value: v,
+      label: TONTINE_STATUS_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "multi",
+    key: "types",
+    label: "Types",
+    options: Object.values(TontineType).map((v) => ({
+      value: v,
+      label: TONTINE_TYPE_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "multi",
+    key: "frequencies",
+    label: "Fréquence",
+    options: Object.values(TontineFrequency).map((v) => ({
+      value: v,
+      label: TONTINE_FREQUENCY_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "multi",
+    key: "draw_modes",
+    label: "Mode de tirage",
+    options: Object.values(TontineDrawMode).map((v) => ({
+      value: v,
+      label: TONTINE_DRAW_MODE_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "date-range",
+    key: "start",
+    label: "Date de démarrage",
+  },
+  {
+    kind: "select",
+    key: "sort",
+    label: "Tri",
+    placeholder: "Plus récent d'abord",
+    options: [
+      { value: "created_desc", label: "Plus récent d'abord" },
+      { value: "created_asc", label: "Plus ancien d'abord" },
+      { value: "start_asc", label: "Démarrage le plus proche" },
+      { value: "start_desc", label: "Démarrage le plus lointain" },
+      { value: "name_asc", label: "Nom (A→Z)" },
+      { value: "amount_desc", label: "Montant (plus élevé d'abord)" },
+    ],
+  },
+];
 
 function FillBar({ count, max }: { count: number; max: number }) {
   const percent = max ? Math.min(100, Math.round((count / max) * 100)) : 0;
@@ -74,24 +137,31 @@ function FillBar({ count, max }: { count: number; max: number }) {
 
 export default function TontinesPage() {
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<string>("");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 350);
+  const [values, setValues] = useState<FilterValues>({});
 
-  const fetchTontines = useCallback(
-    () =>
-      tontineService.list({
-        page,
-        perPage: PER_PAGE,
-        status: status || undefined,
-        search: debouncedSearch.trim() || undefined,
-      }),
-    [page, status, debouncedSearch],
-  );
+  const fetchTontines = useCallback(() => {
+    const v = values;
+    const asStr = (k: string) =>
+      typeof v[k] === "string" ? (v[k] as string) : undefined;
+    const asArr = (k: string) =>
+      Array.isArray(v[k]) ? (v[k] as string[]) : undefined;
+    return tontineService.list({
+      page,
+      perPage: PER_PAGE,
+      search: asStr("search"),
+      statuses: asArr("statuses"),
+      types: asArr("types"),
+      frequencies: asArr("frequencies"),
+      drawModes: asArr("draw_modes"),
+      startFrom: asStr("start_from"),
+      startTo: asStr("start_to"),
+      sort: asStr("sort") ?? "created_desc",
+    });
+  }, [page, values]);
+
   const { data, isLoading, error, execute } =
     useAsync<TontineListResponse>(fetchTontines);
 
-  // Refresh live à chaque changement de statut / inscription / désistement.
   useRealtime(["tontine.updated"], () => {
     void execute();
   });
@@ -115,29 +185,12 @@ export default function TontinesPage() {
         }
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Rechercher une tontine par nom…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              leadingIcon={<Search />}
-            />
-          </div>
-          <Select
-            value={status}
-            options={STATUS_FILTER_OPTIONS}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-          />
-        </CardContent>
-      </Card>
+      <AdvancedFilters
+        fields={TONTINE_FILTERS}
+        onApply={setValues}
+        onPageReset={() => setPage(1)}
+        collapsible
+      />
 
       {error ? (
         <ErrorState message={getErrorMessage(error)} onRetry={execute} />
@@ -152,7 +205,7 @@ export default function TontinesPage() {
       ) : !data || data.items.length === 0 ? (
         <EmptyState
           title="Aucune tontine"
-          description="Créez votre première tontine."
+          description="Aucune tontine ne correspond à ces filtres."
         />
       ) : (
         <Card>

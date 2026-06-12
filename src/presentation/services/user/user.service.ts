@@ -3,6 +3,7 @@
  */
 
 import { userRepository } from "@/core/data/repositories";
+import type { ListUsersParams } from "@/core/domain/repositories/user";
 import type {
   AdminCreateUserInput,
   AdminUpdateUserInput,
@@ -22,13 +23,7 @@ class UserService {
     return userRepository.updateProfile(data);
   }
 
-  listUsers(params?: {
-    page?: number;
-    perPage?: number;
-    search?: string;
-    includeDeleted?: boolean;
-    roles?: string[];
-  }): Promise<UserListResponse> {
+  listUsers(params?: ListUsersParams): Promise<UserListResponse> {
     return userRepository.listUsers(params);
   }
 

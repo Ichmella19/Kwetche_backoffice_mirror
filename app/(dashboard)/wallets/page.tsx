@@ -262,9 +262,11 @@ function PlatformWalletCard({
                 <Badge variant="outline">Compte système</Badge>
               </div>
               <p className="text-sm text-muted">
-                Compte « maison » utilisé comme escrow pour les flux tontine.
-                N&apos;appartient à personne physique — son solde reflète le
-                passif net de la plateforme envers ses utilisateurs.
+                Compte technique hérité (legacy). Les flux tontine passent
+                désormais par les comptes dédiés de chaque tontine
+                (pot / réserve / cautions) et par les comptes « maison »
+                (Gains, Pertes, Trésorerie, Prêts). N&apos;appartient à
+                personne physique.
               </p>
             </div>
 

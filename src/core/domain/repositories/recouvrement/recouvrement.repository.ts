@@ -7,13 +7,25 @@ import type {
   ResolveCaseInput,
 } from "@/lib/types";
 
+export interface ListRecouvrementCasesParams {
+  page?: number;
+  perPage?: number;
+  status?: string;
+  assignedAgentId?: string;
+  statuses?: string[];
+  userId?: string;
+  amountMin?: number;
+  amountMax?: number;
+  openedFrom?: string;
+  openedTo?: string;
+  unassigned?: boolean;
+  sort?: string;
+}
+
 export interface IRecouvrementRepository {
-  listCases(params: {
-    page: number;
-    perPage: number;
-    status?: string;
-    assignedAgentId?: string;
-  }): Promise<RecouvrementCaseListResponse>;
+  listCases(
+    params: ListRecouvrementCasesParams,
+  ): Promise<RecouvrementCaseListResponse>;
   getCase(caseId: string): Promise<RecouvrementCaseDetail>;
   assignSelf(caseId: string): Promise<RecouvrementCase>;
   addAction(

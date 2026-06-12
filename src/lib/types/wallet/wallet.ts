@@ -33,6 +33,22 @@ export interface WalletTransaction {
   reference: string | null;
   description: string | null;
   created_at: string | null;
+  user_id?: string;
+  /** Mini-payload utilisateur joint par l'endpoint admin transverse. */
+  user?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    country_code: string | null;
+  };
+}
+
+export interface WalletTransactionsResponse {
+  items: WalletTransaction[];
+  total: number;
+  page: number;
+  per_page: number;
 }
 
 export interface WalletUserView {

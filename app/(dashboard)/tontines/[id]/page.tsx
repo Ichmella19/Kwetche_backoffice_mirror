@@ -8,7 +8,9 @@ import {
   CalendarDays,
   Coins,
   Crown,
+  Download,
   Hash,
+  Megaphone,
   Paperclip,
   PiggyBank,
   Receipt,
@@ -22,6 +24,8 @@ import {
 import { PageHeader } from "@/presentation/components/shared/page-header";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { ConfirmDialog } from "@/presentation/components/shared/confirm-dialog";
+import { NotifyMembersDialog } from "@/presentation/components/tontine/notify-members-dialog";
+import { TontineAccountsPanel } from "@/presentation/components/tontine/tontine-accounts-panel";
 import {
   Avatar,
   AvatarFallback,
@@ -165,11 +169,24 @@ export default function TontineDetailPage({ params }: PageProps) {
   const [postponeOpen, setPostponeOpen] = useState(false);
   const [postponeDate, setPostponeDate] = useState("");
   const [cancelStep, setCancelStep] = useState<0 | 1 | 2>(0);
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     label: string;
     description: string;
     fn: () => Promise<void>;
   } | null>(null);
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      await tontineService.exportMembers(id);
+    } catch (err) {
+      toast.error("Export impossible", getErrorMessage(err));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const run = async (fn: () => Promise<unknown>, okMsg: string) => {
     setBusy(true);
@@ -297,6 +314,27 @@ export default function TontineDetailPage({ params }: PageProps) {
                 </Button>
               </>
             )}
+            {!isDraft && (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => setNotifyOpen(true)}
+                >
+                  <Megaphone className="size-4" />
+                  Notifier
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={exporting}
+                  isLoading={exporting}
+                  onClick={exportCsv}
+                >
+                  <Download className="size-4" />
+                  Exporter CSV
+                </Button>
+              </>
+            )}
             {canCancel && (
               <Button
                 variant="danger"
@@ -391,10 +429,6 @@ export default function TontineDetailPage({ params }: PageProps) {
               value={TONTINE_DRAW_MODE_LABELS[t.draw_mode] ?? t.draw_mode}
             />
             <KV
-              label="Commission"
-              value={`${t.commission_rate}%`}
-            />
-            <KV
               label="Fenêtre d'annulation"
               value={`${t.cancellation_window_days} j`}
             />
@@ -437,6 +471,13 @@ export default function TontineDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Comptes internes (pot / réserve / cautions) + relevé ─────── */}
+      <TontineAccountsPanel
+        tontineId={id}
+        accounts={data.accounts}
+        currency={t.currency}
+      />
 
       {/* ── Membres ─────────────────────────────────────────────────── */}
       <section>
@@ -875,6 +916,12 @@ export default function TontineDetailPage({ params }: PageProps) {
             "Tontine annulée.",
           ).finally(() => setCancelStep(0));
         }}
+      />
+
+      <NotifyMembersDialog
+        tontineId={id}
+        open={notifyOpen}
+        onOpenChange={setNotifyOpen}
       />
     </div>
   );

@@ -1,11 +1,18 @@
 import { httpService } from "@/core/data/http.service";
-import type { IKycRepository } from "@/core/domain/repositories";
+import type {
+  IKycRepository,
+  ListDossiersParams,
+} from "@/core/domain/repositories/kyc";
 import type {
   CreateDocumentRequestInput,
   KycDocument,
   KycDocumentRequest,
+  KycDossierDetail,
+  KycDossierListResponse,
+  KycGuarantee,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewGuaranteeInput,
   ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "@/lib/types";
@@ -67,6 +74,41 @@ export class KycRepository implements IKycRepository {
   ): Promise<KycIdentityReview> {
     return httpService.post<KycIdentityReview>(
       `/admin/kyc/identity/${userId}/review`,
+      input,
+    );
+  }
+
+  // ── Dossiers N2 / N3 ───────────────────────────────
+  listDossiers(
+    level: 2 | 3,
+    params: ListDossiersParams = {},
+  ): Promise<KycDossierListResponse> {
+    return httpService.get<KycDossierListResponse>(
+      `/admin/kyc/levels/${level}/dossiers`,
+      {
+        query: {
+          page: params.page,
+          per_page: params.perPage,
+          search: params.search,
+          status: params.status,
+          sort: params.sort,
+        },
+      },
+    );
+  }
+
+  getDossier(userId: string): Promise<KycDossierDetail> {
+    return httpService.get<KycDossierDetail>(
+      `/admin/kyc/dossiers/${userId}`,
+    );
+  }
+
+  reviewGuarantee(
+    guaranteeId: string,
+    input: ReviewGuaranteeInput,
+  ): Promise<KycGuarantee> {
+    return httpService.post<KycGuarantee>(
+      `/admin/kyc/guarantees/${guaranteeId}/review`,
       input,
     );
   }

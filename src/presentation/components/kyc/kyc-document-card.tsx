@@ -59,6 +59,22 @@ export function KycDocumentCard({
           </p>
         )}
 
+        {(document.expires_at || document.document_reference) && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+            {document.document_reference && (
+              <span>
+                Réf : <span className="font-mono">{document.document_reference}</span>
+              </span>
+            )}
+            {document.expires_at && (
+              <span>
+                Valide jusqu'au{" "}
+                {new Date(document.expires_at).toLocaleDateString("fr-FR")}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="mt-auto flex flex-wrap gap-2 pt-1">
           <Button
             variant="accent"

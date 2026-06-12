@@ -7,10 +7,14 @@ import { PageHeader } from "@/presentation/components/shared/page-header";
 import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { Pagination } from "@/presentation/components/shared/pagination";
+import {
+  AdvancedFilters,
+  type FilterField,
+  type FilterValues,
+} from "@/presentation/components/shared/advanced-filters";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
-import { Select } from "@/presentation/components/ui/select";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import {
   Table,
@@ -32,12 +36,55 @@ import { getErrorMessage } from "@/lib/utils/helpers";
 import type { RecouvrementCaseListResponse } from "@/lib/types";
 
 const PER_PAGE = 20;
-const STATUS_OPTIONS = [
-  { value: "", label: "Tous" },
-  ...Object.values(RecouvrementCaseStatus).map((v) => ({
-    value: v,
-    label: RECOUVREMENT_CASE_STATUS_LABELS[v] ?? v,
-  })),
+
+const RECOUVREMENT_FILTERS: FilterField[] = [
+  {
+    kind: "multi",
+    key: "statuses",
+    label: "Statuts",
+    options: Object.values(RecouvrementCaseStatus).map((v) => ({
+      value: v,
+      label: RECOUVREMENT_CASE_STATUS_LABELS[v] ?? v,
+    })),
+  },
+  {
+    kind: "boolean",
+    key: "unassigned",
+    label: "Non assignés uniquement",
+    trueLabel: "Oui",
+    falseLabel: "Non",
+  },
+  {
+    kind: "boolean",
+    key: "mine_only",
+    label: "Mes dossiers seulement",
+    trueLabel: "Oui",
+    falseLabel: "Non",
+  },
+  {
+    kind: "number-range",
+    key: "amount",
+    label: "Montant cible (XOF)",
+    step: 1000,
+    unit: "XOF",
+  },
+  {
+    kind: "date-range",
+    key: "opened",
+    label: "Date d'ouverture",
+  },
+  {
+    kind: "select",
+    key: "sort",
+    label: "Tri",
+    placeholder: "Plus récent",
+    options: [
+      { value: "opened_desc", label: "Ouvert (récent)" },
+      { value: "opened_asc", label: "Ouvert (ancien)" },
+      { value: "amount_desc", label: "Montant (élevé d'abord)" },
+      { value: "amount_asc", label: "Montant (faible d'abord)" },
+    ],
+  },
 ];
 
 function variantOf(status: string): "secondary" | "danger" | "neutral" {
@@ -53,23 +100,39 @@ function variantOf(status: string): "secondary" | "danger" | "neutral" {
 export default function RecouvrementListPage() {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState("");
-  const [mineOnly, setMineOnly] = useState(false);
+  const [values, setValues] = useState<FilterValues>({});
 
-  const fetchCases = useCallback(
-    () =>
-      recouvrementService.listCases({
-        page,
-        perPage: PER_PAGE,
-        status: status || undefined,
-        assignedAgentId: mineOnly ? user?.id : undefined,
-      }),
-    [page, status, mineOnly, user?.id],
-  );
+  const fetchCases = useCallback(() => {
+    const v = values;
+    const asStr = (k: string) =>
+      typeof v[k] === "string" ? (v[k] as string) : undefined;
+    const asArr = (k: string) =>
+      Array.isArray(v[k]) ? (v[k] as string[]) : undefined;
+    const asBool = (k: string) =>
+      v[k] === "true" ? true : v[k] === "false" ? false : undefined;
+    const asNum = (k: string) => {
+      const raw = asStr(k);
+      if (raw === undefined) return undefined;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : undefined;
+    };
+    return recouvrementService.listCases({
+      page,
+      perPage: PER_PAGE,
+      statuses: asArr("statuses"),
+      assignedAgentId: asBool("mine_only") ? user?.id : undefined,
+      unassigned: asBool("unassigned") || undefined,
+      amountMin: asNum("amount_min"),
+      amountMax: asNum("amount_max"),
+      openedFrom: asStr("opened_from"),
+      openedTo: asStr("opened_to"),
+      sort: asStr("sort") ?? "opened_desc",
+    });
+  }, [page, values, user?.id]);
+
   const { data, isLoading, error, execute } =
     useAsync<RecouvrementCaseListResponse>(fetchCases);
 
-  // Refresh live à chaque escalade auto / case nouvellement assigné.
   useRealtime(["recouvrement.case.assigned"], () => {
     void execute();
   });
@@ -86,30 +149,12 @@ export default function RecouvrementListPage() {
         description="File des dossiers de recouvrement."
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <span className="text-sm text-muted">Filtres :</span>
-          <Select
-            value={status}
-            options={STATUS_OPTIONS}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-          />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={mineOnly}
-              onChange={(e) => {
-                setMineOnly(e.target.checked);
-                setPage(1);
-              }}
-            />
-            Mes dossiers seulement
-          </label>
-        </CardContent>
-      </Card>
+      <AdvancedFilters
+        fields={RECOUVREMENT_FILTERS}
+        onApply={setValues}
+        onPageReset={() => setPage(1)}
+        collapsible
+      />
 
       {error ? (
         <ErrorState message={getErrorMessage(error)} onRetry={execute} />

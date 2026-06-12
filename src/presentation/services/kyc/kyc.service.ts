@@ -3,12 +3,17 @@
  */
 
 import { kycRepository } from "@/core/data/repositories";
+import type { ListDossiersParams } from "@/core/domain/repositories/kyc";
 import type {
   CreateDocumentRequestInput,
   KycDocument,
   KycDocumentRequest,
+  KycDossierDetail,
+  KycDossierListResponse,
+  KycGuarantee,
   KycIdentityPendingResponse,
   KycIdentityReview,
+  ReviewGuaranteeInput,
   ReviewKycDocumentInput,
   ReviewKycIdentityInput,
 } from "@/lib/types";
@@ -62,6 +67,28 @@ class KycService {
     input: ReviewKycIdentityInput,
   ): Promise<KycIdentityReview> {
     return kycRepository.reviewIdentity(userId, {
+      ...input,
+      reason: input.reason?.trim() || undefined,
+    });
+  }
+
+  // ── Dossiers N2 / N3 (champs + docs + garanties) ───
+  listDossiers(
+    level: 2 | 3,
+    params?: ListDossiersParams,
+  ): Promise<KycDossierListResponse> {
+    return kycRepository.listDossiers(level, params);
+  }
+
+  getDossier(userId: string): Promise<KycDossierDetail> {
+    return kycRepository.getDossier(userId);
+  }
+
+  reviewGuarantee(
+    guaranteeId: string,
+    input: ReviewGuaranteeInput,
+  ): Promise<KycGuarantee> {
+    return kycRepository.reviewGuarantee(guaranteeId, {
       ...input,
       reason: input.reason?.trim() || undefined,
     });

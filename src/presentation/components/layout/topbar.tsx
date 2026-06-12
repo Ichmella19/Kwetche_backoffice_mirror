@@ -5,6 +5,7 @@ import { Button } from "@/presentation/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 import { Brand } from "./brand";
+import { InboxBell } from "./inbox-bell";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
@@ -24,6 +25,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <InboxBell />
         <ThemeToggle />
         <UserMenu />
       </div>

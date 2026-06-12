@@ -14,3 +14,9 @@ export { EmptyState } from "./empty-state";
 export { Pagination } from "./pagination";
 export { ConfirmDialog } from "./confirm-dialog";
 export { Sparkline } from "./sparkline";
+export { AdvancedFilters } from "./advanced-filters";
+export type {
+  FilterField,
+  FilterOption,
+  FilterValues,
+} from "./advanced-filters";

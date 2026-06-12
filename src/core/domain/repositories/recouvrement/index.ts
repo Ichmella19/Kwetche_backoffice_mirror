@@ -1,1 +1,4 @@
-export type { IRecouvrementRepository } from "./recouvrement.repository";
+export type {
+  IRecouvrementRepository,
+  ListRecouvrementCasesParams,
+} from "./recouvrement.repository";

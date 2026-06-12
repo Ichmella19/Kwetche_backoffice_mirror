@@ -4,27 +4,26 @@
  */
 
 import { tontineRepository } from "@/core/data/repositories/tontine";
+import type { ListTontinesParams } from "@/core/domain/repositories/tontine";
 import type {
   CreateTontineInput,
+  InternalLedgerResponse,
+  NotifyTontineMembersInput,
+  NotifyTontineMembersResult,
   Tontine,
   TontineDetail,
   TontineListResponse,
+  TontinePendingStartResponse,
   TontineWithdrawalRequest,
   UpdateTontineInput,
 } from "@/lib/types";
 
 class TontineService {
-  list(params: {
-    page?: number;
-    perPage?: number;
-    status?: string;
-    search?: string;
-  } = {}): Promise<TontineListResponse> {
+  list(params: ListTontinesParams = {}): Promise<TontineListResponse> {
     return tontineRepository.list({
       page: params.page ?? 1,
       perPage: params.perPage ?? 20,
-      status: params.status,
-      search: params.search,
+      ...params,
     });
   }
 
@@ -58,6 +57,32 @@ class TontineService {
 
   listWithdrawals(id: string): Promise<TontineWithdrawalRequest[]> {
     return tontineRepository.listWithdrawals(id);
+  }
+
+  listPendingStart(): Promise<TontinePendingStartResponse> {
+    return tontineRepository.listPendingStart();
+  }
+
+  ledger(
+    id: string,
+    params?: { page?: number; perPage?: number; purpose?: string; movement?: string },
+  ): Promise<InternalLedgerResponse> {
+    return tontineRepository.ledger(id, params);
+  }
+
+  notifyMembers(
+    id: string,
+    input: NotifyTontineMembersInput,
+  ): Promise<NotifyTontineMembersResult> {
+    return tontineRepository.notifyMembers(id, {
+      ...input,
+      title: input.title.trim(),
+      body: input.body.trim(),
+    });
+  }
+
+  exportMembers(id: string): Promise<void> {
+    return tontineRepository.exportMembers(id);
   }
 }
 

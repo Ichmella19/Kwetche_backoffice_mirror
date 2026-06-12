@@ -1,5 +1,8 @@
 import { httpService } from "@/core/data/http.service";
-import type { IRecouvrementRepository } from "@/core/domain/repositories/recouvrement";
+import type {
+  IRecouvrementRepository,
+  ListRecouvrementCasesParams,
+} from "@/core/domain/repositories/recouvrement";
 import type {
   AddRecouvrementActionInput,
   RecouvrementAction,
@@ -9,18 +12,23 @@ import type {
   ResolveCaseInput,
 } from "@/lib/types";
 
+const csv = (v?: string[]) => (v && v.length > 0 ? v.join(",") : undefined);
+
 export class RecouvrementRepository implements IRecouvrementRepository {
   listCases({
-    page,
-    perPage,
+    page = 1,
+    perPage = 20,
     status,
     assignedAgentId,
-  }: {
-    page: number;
-    perPage: number;
-    status?: string;
-    assignedAgentId?: string;
-  }): Promise<RecouvrementCaseListResponse> {
+    statuses,
+    userId,
+    amountMin,
+    amountMax,
+    openedFrom,
+    openedTo,
+    unassigned,
+    sort,
+  }: ListRecouvrementCasesParams): Promise<RecouvrementCaseListResponse> {
     return httpService.get<RecouvrementCaseListResponse>(
       "/admin/recouvrement/cases",
       {
@@ -29,6 +37,14 @@ export class RecouvrementRepository implements IRecouvrementRepository {
           per_page: perPage,
           status,
           assigned_agent_id: assignedAgentId,
+          statuses: csv(statuses),
+          user_id: userId,
+          amount_min: amountMin,
+          amount_max: amountMax,
+          opened_from: openedFrom,
+          opened_to: openedTo,
+          unassigned: unassigned ? "true" : undefined,
+          sort,
         },
       },
     );

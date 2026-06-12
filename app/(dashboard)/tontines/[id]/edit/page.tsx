@@ -42,7 +42,6 @@ function tontineToForm(t: Tontine): UpdateTontineInput {
     max_members: t.max_members,
     total_rounds: t.total_rounds,
     start_date: toDateInput(t.start_date) || null,
-    commission_rate: t.commission_rate,
     required_kyc_level: t.required_kyc_level,
     caution_amount: t.caution_amount,
     cancellation_window_days: t.cancellation_window_days,
@@ -260,19 +259,6 @@ export default function EditTontinePage() {
             />
           </FieldWithInfo>
 
-          <FieldWithInfo label="Commission (%)" htmlFor="t-commission">
-            <Input
-              id="t-commission"
-              type="number"
-              min={0}
-              max={100}
-              step={0.1}
-              value={form.commission_rate ?? 0}
-              onChange={(e) =>
-                set("commission_rate", Number(e.target.value) || 0)
-              }
-            />
-          </FieldWithInfo>
 
           <FieldWithInfo label="KYC requis (niveau)" htmlFor="t-kyc">
             <Input

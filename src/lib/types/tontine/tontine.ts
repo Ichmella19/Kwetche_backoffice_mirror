@@ -9,7 +9,6 @@ export interface Tontine {
   total_rounds: number | null;
   max_members: number;
   start_date: string | null;
-  commission_rate: number;
   currency: string;
   description: string | null;
   created_by: string | null;
@@ -75,11 +74,55 @@ export interface TontinePayout {
   paid_at: string | null;
 }
 
+/** Compte interne d'une tontine (pot / réserve / cautions). */
+export interface InternalAccount {
+  id: string;
+  scope_type: string;
+  scope_id: string | null;
+  purpose: string;
+  label: string;
+  balance: number;
+  currency: string;
+}
+
+export interface TontineAccounts {
+  pot: InternalAccount;
+  reserve: InternalAccount;
+  cautions: InternalAccount;
+}
+
 export interface TontineDetail {
   tontine: Tontine;
   members: TontineMember[];
   cycles: TontineCycle[];
   payouts?: TontinePayout[];
+  accounts?: TontineAccounts;
+}
+
+/** Ligne du relevé comptable interne (`platform_wallet_transactions`). */
+export interface InternalLedgerEntry {
+  id: string;
+  purpose: string;
+  movement: string;
+  amount: number;
+  balance_after: number;
+  reference: string | null;
+  transfer_id: string | null;
+  tontine_id: string | null;
+  cycle_id: string | null;
+  user_id: string | null;
+  related_type: string | null;
+  related_id: string | null;
+  description: string | null;
+  is_automatic: boolean;
+  created_at: string | null;
+}
+
+export interface InternalLedgerResponse {
+  items: InternalLedgerEntry[];
+  total: number;
+  page: number;
+  per_page: number;
 }
 
 export interface TontineListResponse {
@@ -98,7 +141,6 @@ export interface CreateTontineInput {
   max_members: number;
   total_rounds?: number | null;
   start_date?: string | null;
-  commission_rate: number;
   required_kyc_level: number;
   caution_amount: number;
   cancellation_window_days: number;
@@ -137,4 +179,37 @@ export interface TontineWithdrawalRequest {
   in_penalty_window: boolean;
   created_at: string | null;
   user?: TontineWithdrawalRequestUserMini | null;
+}
+
+/** Ligne de la file « à démarrer » (`GET /admin/tontines/pending-start`). */
+export interface TontinePendingStartItem extends Tontine {
+  joined_members: number;
+  missing_members: number;
+}
+
+export interface TontinePendingStartResponse {
+  items: TontinePendingStartItem[];
+  total: number;
+}
+
+/** Audience d'une notification ciblée à une tontine. */
+export type TontineNotifyAudience =
+  | "all"
+  | "active"
+  | "pending"
+  | "defaulted";
+
+export interface NotifyTontineMembersInput {
+  title: string;
+  body: string;
+  audience: TontineNotifyAudience;
+  /** Canaux : `in_app` | `push` | `email` | `sms`. */
+  channels: string[];
+}
+
+export interface NotifyTontineMembersResult {
+  audience: string;
+  recipients: number;
+  sent: number;
+  channels: string[];
 }

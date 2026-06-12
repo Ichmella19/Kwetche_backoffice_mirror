@@ -5,7 +5,37 @@
 
 export { UserRole, ADMIN_ROLES, KycLevel, Sexe } from "./user-roles/roles";
 export { Grant } from "./grants/grants";
-export { KycDocumentType } from "./kyc/document-type";
+export {
+  KycDocumentType,
+  KYC_DOCUMENT_TYPE_LABELS,
+  levelForDocumentType,
+} from "./kyc/document-type";
+export {
+  EmploymentStatus,
+  EMPLOYMENT_STATUS_LABELS,
+  isBusinessOwner,
+} from "./kyc/employment-status";
+export {
+  GuaranteeType,
+  GUARANTEE_TYPE_LABELS,
+  guaranteeRequiresDocument,
+} from "./kyc/guarantee-type";
+export {
+  MobileMoneyProvider,
+  MOBILE_MONEY_PROVIDER_LABELS,
+  mobileMoneyProviderLabel,
+} from "./kyc/mobile-money";
+export {
+  GuarantorRelationship,
+  GUARANTOR_RELATIONSHIP_LABELS,
+  guarantorRelationshipLabel,
+} from "./kyc/guarantor";
+export {
+  KycAction,
+  KYC_ACTION_LABELS,
+  kycActionLabel,
+  kycActionTone,
+} from "./kyc/kyc-action";
 export {
   KycRequestStatus,
   KYC_REQUEST_STATUS_LABELS,
@@ -80,3 +110,8 @@ export {
   SUPPORT_STATUS_LABELS,
   SUPPORT_CATEGORY_LABELS,
 } from "./support/support";
+export {
+  InboxItemKind,
+  INBOX_KIND_LABELS,
+  routeForInboxItem,
+} from "./inbox/inbox";

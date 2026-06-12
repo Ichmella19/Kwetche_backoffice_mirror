@@ -1,1 +1,1 @@
-export type { IUserRepository } from "./user.repository";
+export type { IUserRepository, ListUsersParams } from "./user.repository";

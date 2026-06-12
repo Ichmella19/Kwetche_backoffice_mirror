@@ -2,16 +2,19 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Search, Shield } from "lucide-react";
+import { Eye, Shield } from "lucide-react";
 import { PageHeader } from "@/presentation/components/shared/page-header";
 import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { Pagination } from "@/presentation/components/shared/pagination";
+import {
+  AdvancedFilters,
+  type FilterField,
+  type FilterValues,
+} from "@/presentation/components/shared/advanced-filters";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent } from "@/presentation/components/ui/card";
-import { Input } from "@/presentation/components/ui/input";
-import { Select } from "@/presentation/components/ui/select";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import {
   Table,
@@ -21,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/presentation/components/ui/table";
-import { useAsync, useDebounce } from "@/presentation/hooks";
+import { useAsync } from "@/presentation/hooks";
 import { useAuth } from "@/presentation/contexts/auth-context";
 import { userService } from "@/presentation/services/user";
 import { GRANT_LABELS, ROLE_LABELS, ROUTES } from "@/lib/constants";
@@ -32,12 +35,46 @@ import type { UserListResponse } from "@/lib/types";
 
 const PER_PAGE = 20;
 
-const ROLE_OPTIONS = [
-  { value: "all", label: "Tous les rôles staff" },
-  ...ADMIN_ROLES.map((r) => ({
-    value: r,
-    label: ROLE_LABELS[r] ?? r,
-  })),
+const STAFF_FILTERS: FilterField[] = [
+  {
+    kind: "text",
+    key: "search",
+    label: "Recherche",
+    placeholder: "Nom, téléphone, email…",
+  },
+  {
+    kind: "multi",
+    key: "roles",
+    label: "Rôles staff",
+    options: ADMIN_ROLES.map((r) => ({
+      value: r,
+      label: ROLE_LABELS[r] ?? r,
+    })),
+  },
+  {
+    kind: "boolean",
+    key: "is_desactivate",
+    label: "Comptes désactivés uniquement",
+    trueLabel: "Désactivés",
+    falseLabel: "Actifs",
+  },
+  {
+    kind: "date-range",
+    key: "created",
+    label: "Date de création",
+  },
+  {
+    kind: "select",
+    key: "sort",
+    label: "Tri",
+    placeholder: "Plus récent",
+    options: [
+      { value: "created_desc", label: "Création (récent)" },
+      { value: "created_asc", label: "Création (ancien)" },
+      { value: "name_asc", label: "Nom (A→Z)" },
+      { value: "last_login_desc", label: "Dernière connexion" },
+    ],
+  },
 ];
 
 function roleVariant(role: string): "danger" | "secondary" | "neutral" {
@@ -50,29 +87,36 @@ export default function StaffPage() {
   const { hasGrant } = useAuth();
   const canRead = hasGrant(Grant.USER_READ);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const debouncedSearch = useDebounce(search, 350);
+  const [values, setValues] = useState<FilterValues>({});
 
-  const roles = useMemo(() => {
-    if (roleFilter === "all") return ADMIN_ROLES;
-    return [roleFilter];
-  }, [roleFilter]);
+  const fetchStaff = useCallback(() => {
+    const v = values;
+    const asStr = (k: string) =>
+      typeof v[k] === "string" ? (v[k] as string) : undefined;
+    const asArr = (k: string) =>
+      Array.isArray(v[k]) ? (v[k] as string[]) : undefined;
+    const asBool = (k: string) =>
+      v[k] === "true" ? true : v[k] === "false" ? false : undefined;
+    const roles = asArr("roles");
+    return userService.listUsers({
+      page,
+      perPage: PER_PAGE,
+      search: asStr("search"),
+      roles: roles && roles.length > 0 ? roles : ADMIN_ROLES,
+      isDesactivate: asBool("is_desactivate"),
+      createdAtFrom: asStr("created_from"),
+      createdAtTo: asStr("created_to"),
+      sort: asStr("sort") ?? "created_desc",
+    });
+  }, [page, values]);
 
-  const fetchStaff = useCallback(
-    () =>
-      userService.listUsers({
-        page,
-        perPage: PER_PAGE,
-        search: debouncedSearch.trim() || undefined,
-        roles,
-      }),
-    [page, debouncedSearch, roles],
-  );
   const { data, isLoading, error, execute } =
     useAsync<UserListResponse>(fetchStaff);
 
-  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PER_PAGE));
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil((data?.total ?? 0) / PER_PAGE)),
+    [data?.total],
+  );
 
   if (!canRead) {
     return (
@@ -95,29 +139,12 @@ export default function StaffPage() {
         }
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Rechercher (nom, téléphone, email)…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              leadingIcon={<Search />}
-            />
-          </div>
-          <Select
-            value={roleFilter}
-            options={ROLE_OPTIONS}
-            onChange={(e) => {
-              setRoleFilter(e.target.value);
-              setPage(1);
-            }}
-          />
-        </CardContent>
-      </Card>
+      <AdvancedFilters
+        fields={STAFF_FILTERS}
+        onApply={setValues}
+        onPageReset={() => setPage(1)}
+        collapsible
+      />
 
       {error ? (
         <ErrorState message={getErrorMessage(error)} onRetry={execute} />

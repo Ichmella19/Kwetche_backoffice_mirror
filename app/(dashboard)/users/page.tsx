@@ -6,7 +6,6 @@ import {
   Eye,
   Plus,
   RotateCcw,
-  Search,
   ShieldOff,
   Trash2,
   UserCog,
@@ -17,9 +16,14 @@ import { EmptyState } from "@/presentation/components/shared/empty-state";
 import { ErrorState } from "@/presentation/components/shared/error";
 import { Pagination } from "@/presentation/components/shared/pagination";
 import { ConfirmDialog } from "@/presentation/components/shared/confirm-dialog";
+import {
+  AdvancedFilters,
+  type FilterField,
+  type FilterValues,
+} from "@/presentation/components/shared/advanced-filters";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Button } from "@/presentation/components/ui/button";
-import { Card, CardContent } from "@/presentation/components/ui/card";
+import { Card } from "@/presentation/components/ui/card";
 import { Field } from "@/presentation/components/ui/field";
 import { Input } from "@/presentation/components/ui/input";
 import { Select } from "@/presentation/components/ui/select";
@@ -33,7 +37,7 @@ import {
   TableRow,
 } from "@/presentation/components/ui/table";
 import { Textarea } from "@/presentation/components/ui/textarea";
-import { useAsync, useDebounce, useToast } from "@/presentation/hooks";
+import { useAsync, useToast } from "@/presentation/hooks";
 import { useAuth } from "@/presentation/contexts/auth-context";
 import { userService } from "@/presentation/services/user";
 import { GRANT_LABELS, ROLE_LABELS } from "@/lib/constants";
@@ -115,13 +119,83 @@ function StatusBadges({ user }: { user: User }) {
   );
 }
 
+// ── Filtres avancés Users (schéma déclaratif) ─────────────────────────
+const USER_FILTERS: FilterField[] = [
+  {
+    kind: "text",
+    key: "search",
+    label: "Recherche",
+    placeholder: "Nom, téléphone, email...",
+  },
+  {
+    kind: "multi",
+    key: "kyc_level",
+    label: "Niveau KYC",
+    options: [
+      { value: "0", label: "N0" },
+      { value: "1", label: "N1" },
+      { value: "2", label: "N2" },
+      { value: "3", label: "N3" },
+    ],
+  },
+  {
+    kind: "multi",
+    key: "roles",
+    label: "Rôle",
+    options: [
+      { value: UserRole.USER, label: "Membre" },
+      { value: UserRole.ASSISTANT, label: "Assistant" },
+      { value: UserRole.ADMIN, label: "Admin" },
+      { value: UserRole.SUPER_ADMIN, label: "Super admin" },
+    ],
+  },
+  {
+    kind: "boolean",
+    key: "is_verified",
+    label: "Vérifié",
+    trueLabel: "Vérifié",
+    falseLabel: "Non vérifié",
+  },
+  {
+    kind: "boolean",
+    key: "is_desactivate",
+    label: "Désactivé",
+    trueLabel: "Désactivé",
+    falseLabel: "Actif",
+  },
+  {
+    kind: "boolean",
+    key: "include_deleted",
+    label: "Comptes supprimés",
+    trueLabel: "Inclure",
+    falseLabel: "Exclure",
+  },
+  {
+    kind: "date-range",
+    key: "created_at",
+    label: "Date d'inscription",
+  },
+  {
+    kind: "select",
+    key: "sort",
+    label: "Tri",
+    placeholder: "Récents d'abord",
+    options: [
+      { value: "created_desc", label: "Récents d'abord" },
+      { value: "created_asc", label: "Anciens d'abord" },
+      { value: "name_asc", label: "Nom A→Z" },
+      { value: "kyc_desc", label: "KYC ↓" },
+      { value: "kyc_asc", label: "KYC ↑" },
+      { value: "last_login_desc", label: "Dernière connexion" },
+    ],
+  },
+];
+
 export default function UsersPage() {
   const toast = useToast();
   const { hasGrant, user: currentUser } = useAuth();
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [includeDeleted, setIncludeDeleted] = useState(false);
-  const debouncedSearch = useDebounce(search, 350);
+  const [filterValues, setFilterValues] = useState<FilterValues>({});
 
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
   const [form, setForm] = useState<UserFormState>(emptyForm);
@@ -135,14 +209,34 @@ export default function UsersPage() {
   const canDelete = hasGrant(Grant.USER_DELETE);
 
   const fetchUsers = useMemo(
-    () => () =>
-      userService.listUsers({
+    () => () => {
+      const v = filterValues;
+      const asStr = (k: string) =>
+        typeof v[k] === "string" ? (v[k] as string) : undefined;
+      const asArr = (k: string) =>
+        Array.isArray(v[k]) ? (v[k] as string[]) : undefined;
+      const asBool = (k: string) => {
+        const raw = asStr(k);
+        return raw === "1" ? true : raw === "0" ? false : undefined;
+      };
+      const kycLevels = asArr("kyc_level")
+        ?.map((x) => parseInt(x, 10))
+        .filter((n) => !Number.isNaN(n));
+      return userService.listUsers({
         page,
         perPage: PER_PAGE,
-        search: debouncedSearch,
-        includeDeleted,
-      }),
-    [page, debouncedSearch, includeDeleted],
+        search: asStr("search"),
+        includeDeleted: asBool("include_deleted") ?? false,
+        roles: asArr("roles"),
+        kycLevels: kycLevels && kycLevels.length ? kycLevels : undefined,
+        isVerified: asBool("is_verified"),
+        isDesactivate: asBool("is_desactivate"),
+        createdAtFrom: asStr("created_at_from"),
+        createdAtTo: asStr("created_at_to"),
+        sort: asStr("sort"),
+      });
+    },
+    [page, filterValues],
   );
   const { data, isLoading, error, execute } =
     useAsync<UserListResponse>(fetchUsers);
@@ -298,31 +392,12 @@ export default function UsersPage() {
         }
       />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-          <Input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Rechercher nom, téléphone, email..."
-            leadingIcon={<Search />}
-            className="sm:w-96"
-          />
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input
-              type="checkbox"
-              checked={includeDeleted}
-              onChange={(e) => {
-                setIncludeDeleted(e.target.checked);
-                setPage(1);
-              }}
-            />
-            Inclure supprimés
-          </label>
-        </CardContent>
-      </Card>
+      <AdvancedFilters
+        fields={USER_FILTERS}
+        onApply={setFilterValues}
+        onPageReset={() => setPage(1)}
+        collapsible
+      />
 
       {isLoading ? (
         <Skeleton className="h-96 w-full rounded-xl" />

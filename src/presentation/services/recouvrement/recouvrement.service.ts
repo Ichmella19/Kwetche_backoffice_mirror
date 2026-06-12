@@ -3,6 +3,7 @@
  */
 
 import { recouvrementRepository } from "@/core/data/repositories/recouvrement";
+import type { ListRecouvrementCasesParams } from "@/core/domain/repositories/recouvrement";
 import type {
   AddRecouvrementActionInput,
   RecouvrementCase,
@@ -12,17 +13,13 @@ import type {
 } from "@/lib/types";
 
 class RecouvrementService {
-  listCases(params: {
-    page?: number;
-    perPage?: number;
-    status?: string;
-    assignedAgentId?: string;
-  } = {}): Promise<RecouvrementCaseListResponse> {
+  listCases(
+    params: ListRecouvrementCasesParams = {},
+  ): Promise<RecouvrementCaseListResponse> {
     return recouvrementRepository.listCases({
       page: params.page ?? 1,
       perPage: params.perPage ?? 20,
-      status: params.status,
-      assignedAgentId: params.assignedAgentId,
+      ...params,
     });
   }
 

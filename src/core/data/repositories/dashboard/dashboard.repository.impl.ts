@@ -3,7 +3,11 @@ import type {
   AnalyticsRangeParams,
   IDashboardRepository,
 } from "@/core/domain/repositories/dashboard";
-import type { DashboardStats, DashboardTimeseries } from "@/lib/types";
+import type {
+  DashboardStats,
+  DashboardTimeseries,
+  InboxResponse,
+} from "@/lib/types";
 
 export class DashboardRepository implements IDashboardRepository {
   stats(): Promise<DashboardStats> {
@@ -18,6 +22,12 @@ export class DashboardRepository implements IDashboardRepository {
         end_date: params.endDate,
         user_id: params.userId,
       },
+    });
+  }
+
+  inbox(limitPerCategory: number = 50): Promise<InboxResponse> {
+    return httpService.get<InboxResponse>("/admin/inbox", {
+      query: { limit: limitPerCategory },
     });
   }
 }

@@ -7,15 +7,31 @@ import type {
   UserSession,
 } from "@/lib/types";
 
+/** Critères de filtrage / tri pour le listing utilisateurs. */
+export interface ListUsersParams {
+  page?: number;
+  perPage?: number;
+  search?: string;
+  includeDeleted?: boolean;
+  /** Rôles à inclure (`user`, `assistant`, `admin`…). */
+  roles?: string[];
+  /** Niveaux KYC à inclure (0..3). */
+  kycLevels?: number[];
+  /** Trois états : `undefined` = tous, `true` = vérifiés, `false` = non vérifiés. */
+  isVerified?: boolean;
+  /** Idem pour `is_desactivate`. */
+  isDesactivate?: boolean;
+  createdAtFrom?: string;
+  createdAtTo?: string;
+  lastLoginFrom?: string;
+  /** `created_desc` (défaut) | `created_asc` | `name_asc` | `kyc_desc` | `kyc_asc` | `last_login_desc`. */
+  sort?: string;
+}
+
 export interface IUserRepository {
   me(): Promise<User>;
   updateProfile(data: Partial<User>): Promise<User>;
-  listUsers(params?: {
-    page?: number;
-    perPage?: number;
-    search?: string;
-    includeDeleted?: boolean;
-  }): Promise<UserListResponse>;
+  listUsers(params?: ListUsersParams): Promise<UserListResponse>;
   createUser(data: AdminCreateUserInput): Promise<User>;
   getUser(userId: string): Promise<User>;
   updateUser(userId: string, data: AdminUpdateUserInput): Promise<User>;

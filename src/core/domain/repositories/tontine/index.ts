@@ -1,1 +1,4 @@
-export type { ITontineRepository } from "./tontine.repository";
+export type {
+  ITontineRepository,
+  ListTontinesParams,
+} from "./tontine.repository";

@@ -3,7 +3,10 @@
  */
 
 import { supportRepository } from "@/core/data/repositories/support";
-import type { AddSupportMessageInput } from "@/core/domain/repositories/support";
+import type {
+  AddSupportMessageInput,
+  ListSupportTicketsParams,
+} from "@/core/domain/repositories/support";
 import type {
   SupportMessage,
   SupportTicket,
@@ -14,20 +17,12 @@ import type {
 
 class SupportService {
   list(
-    params: {
-      page?: number;
-      perPage?: number;
-      status?: string;
-      category?: string;
-      userId?: string;
-    } = {},
+    params: ListSupportTicketsParams = {},
   ): Promise<SupportTicketListResponse> {
     return supportRepository.list({
       page: params.page ?? 1,
       perPage: params.perPage ?? 20,
-      status: params.status,
-      category: params.category,
-      userId: params.userId,
+      ...params,
     });
   }
 

@@ -1,1 +1,1 @@
-export type { IKycRepository } from "./kyc.repository";
+export type { IKycRepository, ListDossiersParams } from "./kyc.repository";

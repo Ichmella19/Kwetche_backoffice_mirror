@@ -177,6 +177,52 @@ class HttpService {
   delete<T>(path: string, options?: RequestOptions): Promise<T> {
     return this.unwrap(this.send<T>("DELETE", path, options));
   }
+
+  /**
+   * Télécharge un fichier (CSV, PDF…) côté navigateur en conservant le
+   * jeton d'auth. Récupère le blob via `fetch` puis déclenche le download.
+   * Le nom de fichier est déduit du `Content-Disposition` ou de `fallbackName`.
+   */
+  async download(
+    path: string,
+    fallbackName: string,
+    options: RequestOptions = {},
+  ): Promise<void> {
+    const headers: Record<string, string> = { ...(options.headers ?? {}) };
+    if (!options.anonymous) {
+      const token = this.getToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(this.buildUrl(path, options.query), {
+      method: "GET",
+      headers,
+      signal: options.signal,
+    });
+
+    if (response.status === 401 && !options.anonymous) {
+      this.onUnauthorized?.();
+    }
+    if (!response.ok) {
+      throw new ApiError(response.status, "Échec du téléchargement.");
+    }
+
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const match = /filename="?([^"]+)"?/.exec(disposition);
+    const filename = match?.[1] ?? fallbackName;
+
+    const blob = await response.blob();
+    if (typeof window !== "undefined") {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    }
+  }
 }
 
 export const httpService = new HttpService(API_BASE_URL);

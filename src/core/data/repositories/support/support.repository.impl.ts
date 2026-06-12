@@ -2,6 +2,7 @@ import { httpService } from "@/core/data/http.service";
 import type {
   AddSupportMessageInput,
   ISupportRepository,
+  ListSupportTicketsParams,
 } from "@/core/domain/repositories/support";
 import type {
   SupportMessage,
@@ -11,20 +12,22 @@ import type {
   UpdateSupportStatusInput,
 } from "@/lib/types";
 
+const csv = (v?: string[]) => (v && v.length > 0 ? v.join(",") : undefined);
+
 export class SupportRepository implements ISupportRepository {
   list({
-    page,
-    perPage,
+    page = 1,
+    perPage = 20,
     status,
     category,
     userId,
-  }: {
-    page: number;
-    perPage: number;
-    status?: string;
-    category?: string;
-    userId?: string;
-  }): Promise<SupportTicketListResponse> {
+    statuses,
+    categories,
+    search,
+    createdFrom,
+    createdTo,
+    sort,
+  }: ListSupportTicketsParams): Promise<SupportTicketListResponse> {
     return httpService.get<SupportTicketListResponse>(
       "/admin/support/tickets",
       {
@@ -34,6 +37,12 @@ export class SupportRepository implements ISupportRepository {
           status,
           category,
           user_id: userId,
+          statuses: csv(statuses),
+          categories: csv(categories),
+          search,
+          created_from: createdFrom,
+          created_to: createdTo,
+          sort,
         },
       },
     );

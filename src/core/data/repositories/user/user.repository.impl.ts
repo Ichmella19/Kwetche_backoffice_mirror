@@ -1,5 +1,8 @@
 import { httpService } from "@/core/data/http.service";
-import type { IUserRepository } from "@/core/domain/repositories";
+import type {
+  IUserRepository,
+  ListUsersParams,
+} from "@/core/domain/repositories/user";
 import type {
   AdminCreateUserInput,
   AdminUpdateUserInput,
@@ -37,15 +40,7 @@ export class UserRepository implements IUserRepository {
     return httpService.patch<User>("/user/me", data);
   }
 
-  listUsers(
-    params: {
-      page?: number;
-      perPage?: number;
-      search?: string;
-      includeDeleted?: boolean;
-      roles?: string[];
-    } = {},
-  ): Promise<UserListResponse> {
+  listUsers(params: ListUsersParams = {}): Promise<UserListResponse> {
     return httpService.get<UserListResponse>("/admin/users", {
       query: {
         page: params.page,
@@ -55,6 +50,22 @@ export class UserRepository implements IUserRepository {
         roles: params.roles && params.roles.length > 0
           ? params.roles.join(",")
           : undefined,
+        kyc_level:
+          params.kycLevels && params.kycLevels.length > 0
+            ? params.kycLevels.join(",")
+            : undefined,
+        is_verified:
+          params.isVerified == null ? undefined : params.isVerified ? "1" : "0",
+        is_desactivate:
+          params.isDesactivate == null
+            ? undefined
+            : params.isDesactivate
+              ? "1"
+              : "0",
+        created_at_from: params.createdAtFrom,
+        created_at_to: params.createdAtTo,
+        last_login_from: params.lastLoginFrom,
+        sort: params.sort,
       },
     });
   }

@@ -32,7 +32,6 @@ const initial: CreateTontineInput = {
   max_members: 10,
   total_rounds: null,
   start_date: null,
-  commission_rate: 0,
   required_kyc_level: 1,
   caution_amount: 0,
   cancellation_window_days: 3,
@@ -239,23 +238,6 @@ export default function NewTontinePage() {
             />
           </FieldWithInfo>
 
-          <FieldWithInfo
-            label="Commission (%)"
-            htmlFor="t-commission"
-            info="Pourcentage retenu par la plateforme sur chaque cagnotte versée. La commission alimente le fond de réserve de la tontine."
-          >
-            <Input
-              id="t-commission"
-              type="number"
-              min={0}
-              max={100}
-              step={0.1}
-              value={form.commission_rate || ""}
-              onChange={(e) =>
-                set("commission_rate", Number(e.target.value) || 0)
-              }
-            />
-          </FieldWithInfo>
 
           <FieldWithInfo
             label="KYC requis (niveau)"

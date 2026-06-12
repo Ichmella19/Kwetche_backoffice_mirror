@@ -7,7 +7,9 @@ import {
   Banknote,
   CheckCircle,
   Clock,
+  Inbox,
   Landmark,
+  LifeBuoy,
   PiggyBank,
   Receipt,
   Scale,
@@ -87,6 +89,9 @@ export default function DashboardPage() {
         title={`Bonjour ${user?.first_name ?? ""} 👋`}
         description="Vue d'ensemble en temps réel de l'activité Kwetche."
       />
+
+      {/* ── À traiter ────────────────────────────────────────────── */}
+      <ToDoBlock stats={stats} isLoading={statsLoading} />
 
       {/* KPIs principaux */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -507,5 +512,152 @@ function ActionCard({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+// ── Bloc « À traiter » : 5 cartes cliquables orientées action ──────────
+
+function relAge(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return null;
+  const ms = Date.now() - t;
+  const min = Math.floor(ms / 60_000);
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} h`;
+  const d = Math.floor(h / 24);
+  return `${d} j`;
+}
+
+function ToDoBlock({
+  stats,
+  isLoading,
+}: {
+  stats: DashboardStats | null | undefined;
+  isLoading: boolean;
+}) {
+  const tiles = [
+    {
+      label: "KYC Identité",
+      sub: "Hard-gate — priorité max",
+      icon: ShieldCheck,
+      count: stats?.kyc.pending_identity ?? 0,
+      age: relAge(stats?.kyc.oldest_pending_identity_at),
+      href: ROUTES.KYC,
+      tone: "danger" as const,
+    },
+    {
+      label: "Docs KYC N2/N3",
+      sub: "Pièces complémentaires",
+      icon: ShieldCheck,
+      count:
+        (stats?.kyc.pending_documents_n2 ?? 0) +
+        (stats?.kyc.pending_documents_n3 ?? 0),
+      age: relAge(
+        // plus ancien des deux
+        [
+          stats?.kyc.oldest_pending_doc_n2_at,
+          stats?.kyc.oldest_pending_doc_n3_at,
+        ]
+          .filter(Boolean)
+          .sort()[0] as string | undefined,
+      ),
+      href: ROUTES.KYC_N2,
+      tone: "warning" as const,
+    },
+    {
+      label: "Transactions",
+      sub: "À valider / rejeter",
+      icon: Wallet,
+      count: stats?.wallet.pending_tx ?? 0,
+      age: relAge(stats?.wallet.oldest_pending_tx_at),
+      href: ROUTES.WALLET_TRANSACTIONS,
+      tone: "warning" as const,
+    },
+    {
+      label: "Tickets support",
+      sub: "Ouverts ou en cours",
+      icon: LifeBuoy,
+      count: stats?.support?.open_tickets ?? 0,
+      age: relAge(stats?.support?.oldest_open_ticket_at),
+      href: ROUTES.SUPPORT,
+      tone: "info" as const,
+    },
+    {
+      label: "Recouvrement",
+      sub: "Dettes ouvertes",
+      icon: Scale,
+      count: stats?.recouvrement.open_debts ?? 0,
+      age: relAge(stats?.recouvrement.oldest_open_debt_at),
+      href: ROUTES.RECOUVREMENT,
+      tone: "info" as const,
+    },
+  ];
+  const totalToDo = tiles.reduce((s, t) => s + t.count, 0);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <Inbox className="size-5 text-primary" />
+          À traiter
+          <Badge variant={totalToDo > 0 ? "danger" : "neutral"}>
+            {totalToDo}
+          </Badge>
+        </h2>
+        <Button asChild variant="ghost" size="sm">
+          <Link href={ROUTES.INBOX}>
+            Voir tout
+            <ArrowRight className="size-4" />
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {tiles.map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link
+              key={t.label}
+              href={t.href}
+              className="group focus-visible:outline-none"
+            >
+              <Card className="h-full transition-colors group-hover:bg-muted/30 group-focus-visible:bg-muted/30">
+                <CardContent className="space-y-2 p-4">
+                  <div className="flex items-start justify-between">
+                    <Icon className="size-5 text-muted" />
+                    {isLoading ? (
+                      <Skeleton className="h-5 w-10" />
+                    ) : (
+                      <Badge
+                        variant={t.count > 0 ? t.tone : "neutral"}
+                        className="text-base"
+                      >
+                        {t.count}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {t.label}
+                    </p>
+                    <p className="text-xs text-muted">{t.sub}</p>
+                  </div>
+                  {t.count > 0 && t.age ? (
+                    <p className="flex items-center gap-1 text-xs text-muted">
+                      <Clock className="size-3" />
+                      Plus ancien : {t.age}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted">À jour</p>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }

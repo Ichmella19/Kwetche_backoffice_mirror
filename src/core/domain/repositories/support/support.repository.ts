@@ -13,14 +13,22 @@ export interface AddSupportMessageInput {
   status?: string;
 }
 
+export interface ListSupportTicketsParams {
+  page?: number;
+  perPage?: number;
+  status?: string;
+  category?: string;
+  userId?: string;
+  statuses?: string[];
+  categories?: string[];
+  search?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  sort?: string;
+}
+
 export interface ISupportRepository {
-  list(params: {
-    page: number;
-    perPage: number;
-    status?: string;
-    category?: string;
-    userId?: string;
-  }): Promise<SupportTicketListResponse>;
+  list(params: ListSupportTicketsParams): Promise<SupportTicketListResponse>;
   detail(id: string): Promise<SupportTicketThread>;
   addMessage(
     id: string,

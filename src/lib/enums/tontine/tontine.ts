@@ -24,7 +24,11 @@ export enum TontineStatus {
 export enum TontineFrequency {
   DAILY = "daily",
   WEEKLY = "weekly",
+  BIWEEKLY = "biweekly",
   MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  SEMIANNUAL = "semiannual",
+  YEARLY = "yearly",
 }
 
 export enum TontineMemberStatus {
@@ -81,7 +85,11 @@ export const TONTINE_STATUS_LABELS: Record<string, string> = {
 export const TONTINE_FREQUENCY_LABELS: Record<string, string> = {
   [TontineFrequency.DAILY]: "Quotidienne",
   [TontineFrequency.WEEKLY]: "Hebdomadaire",
+  [TontineFrequency.BIWEEKLY]: "Bimensuelle",
   [TontineFrequency.MONTHLY]: "Mensuelle",
+  [TontineFrequency.QUARTERLY]: "Trimestrielle",
+  [TontineFrequency.SEMIANNUAL]: "Semestrielle",
+  [TontineFrequency.YEARLY]: "Annuelle",
 };
 
 export const TONTINE_MEMBER_STATUS_LABELS: Record<string, string> = {

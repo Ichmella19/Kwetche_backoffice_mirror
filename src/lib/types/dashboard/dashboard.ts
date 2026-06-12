@@ -8,6 +8,7 @@ export interface DashboardStats {
   wallet: WalletStats;
   tontines: TontinesStats;
   recouvrement: RecouvrementStats;
+  support: SupportStats;
   generated_at: string;
 }
 
@@ -25,18 +26,31 @@ export interface KycStats {
   pending_identity: number;
   approved_identity: number;
   declined_identity: number;
+  oldest_pending_identity_at: string | null;
+  pending_documents_n2: number;
+  oldest_pending_doc_n2_at: string | null;
+  pending_documents_n3: number;
+  oldest_pending_doc_n3_at: string | null;
 }
 
 export interface WalletStats {
   total_balance: number;
   total_locked: number;
   pending_tx: number;
+  oldest_pending_tx_at: string | null;
   volume: Record<"24h" | "7d" | "30d", { credit: number; debit: number }>;
+}
+
+export interface SupportStats {
+  open_tickets: number;
+  oldest_open_ticket_at: string | null;
+  by_status: Record<string, number>;
 }
 
 export interface TontinesStats {
   total: number;
   by_status: Record<string, number>;
+  pending_start: number;
   reserve_fund_total: number;
 }
 
@@ -44,7 +58,26 @@ export interface RecouvrementStats {
   open_debts: number;
   open_amount_due: number;
   recovered_total: number;
+  oldest_open_debt_at: string | null;
   cases_by_status: Record<string, number>;
+}
+
+/** Entrée dans la file d'attente unifiée (`GET /admin/inbox`). */
+export interface InboxItem {
+  kind: string;
+  priority: number;
+  user_id: string;
+  user_label: string;
+  since: string | null;
+  subject: string;
+  amount?: number | null;
+  ref_id?: string | null;
+}
+
+export interface InboxResponse {
+  items: InboxItem[];
+  total: number;
+  generated_at: string;
 }
 
 /** Point sur une série temporelle. */
