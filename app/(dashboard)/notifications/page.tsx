@@ -52,26 +52,34 @@ export default function NotificationsPage() {
   const [sending, setSending] = useState(false);
 
   // Recherche debouncée d'utilisateurs.
-  useEffect(() => {
-    const q = search.trim();
+ useEffect(() => {
+  const q = search.trim();
+
+  const handle = setTimeout(async () => {
     if (q.length < 2) {
       setResults([]);
+      setSearching(false);
       return;
     }
-    setSearching(true);
-    const handle = setTimeout(async () => {
-      try {
-        const res = await userService.listUsers({ search: q, perPage: 10 });
-        setResults(res.items);
-      } catch {
-        setResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-    return () => clearTimeout(handle);
-  }, [search]);
 
+    setSearching(true);
+
+    try {
+      const res = await userService.listUsers({
+        search: q,
+        perPage: 10,
+      });
+
+      setResults(res.items);
+    } catch {
+      setResults([]);
+    } finally {
+      setSearching(false);
+    }
+  }, 300);
+
+  return () => clearTimeout(handle);
+}, [search]);
   const selectedIds = useMemo(
     () => new Set(selected.map((u) => u.id)),
     [selected],

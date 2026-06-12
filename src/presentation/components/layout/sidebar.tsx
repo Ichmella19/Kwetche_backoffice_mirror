@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {  useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -280,21 +280,26 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { hasGrant } = useAuth();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const refresh = useCallback(async () => {
+ 
+
+  useEffect(() => {
+  const load = async () => {
     try {
       const data = await dashboardService.getStats();
       setStats(data);
     } catch {
-      // erreur silencieuse : badges = 0 par fallback
+      // ignore
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    void refresh();
-    const id = setInterval(() => void refresh(), REFRESH_MS);
-    return () => clearInterval(id);
-  }, [refresh]);
+  void load();
 
+  const id = setInterval(() => {
+    void load();
+  }, REFRESH_MS);
+
+  return () => clearInterval(id);
+}, []);
   const counters = useMemo(() => countersFromStats(stats), [stats]);
 
   // Filtre récursif par grant.
@@ -440,11 +445,10 @@ function SidebarGroup({
       pathname === c.href ||
       (c.href !== "/" && pathname.startsWith(`${c.href}/`)),
   );
-  const [open, setOpen] = useState(anyActive);
-  // Re-sync quand on navigue dans/hors du groupe.
-  useEffect(() => {
-    if (anyActive) setOpen(true);
-  }, [anyActive]);
+const [manualOpen, setManualOpen] = useState(false);
+
+const open = anyActive || manualOpen;  // Re-sync quand on navigue dans/hors du groupe.
+  
 
   const Icon = group.icon;
   const aggregate = (group.badgeKeys ?? []).reduce(
@@ -456,7 +460,7 @@ function SidebarGroup({
     <div>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+      onClick={() => setManualOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
           "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",

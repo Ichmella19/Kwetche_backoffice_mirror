@@ -713,7 +713,7 @@ function DocumentsBlock({
       <CardContent className="space-y-3 px-5 pb-5">
         {documents.length === 0 ? (
           <p className="text-sm text-muted">
-            Aucun justificatif n'a encore été soumis pour ce niveau.
+            Aucun justificatif n&apos;a encore été soumis pour ce niveau.
           </p>
         ) : (
           documents.map((doc) => (
@@ -864,7 +864,7 @@ function GuaranteesBlock({
       <CardContent className="space-y-3 px-5 pb-5">
         {guarantees.length === 0 ? (
           <p className="text-sm text-muted">
-            L'utilisateur n'a déclaré aucune garantie.
+            L&apos;utilisateur n&apos;a déclaré aucune garantie.
           </p>
         ) : (
           guarantees.map((g) => (

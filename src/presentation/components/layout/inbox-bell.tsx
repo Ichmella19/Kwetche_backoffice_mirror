@@ -65,11 +65,20 @@ export function InboxBell() {
     }
   }, []);
 
-  useEffect(() => {
+ useEffect(() => {
+  const t0 = setTimeout(() => {
     void refresh();
-    const t = setInterval(refresh, POLL_MS);
-    return () => clearInterval(t);
-  }, [refresh]);
+  }, 0);
+
+  const t = setInterval(() => {
+    void refresh();
+  }, POLL_MS);
+
+  return () => {
+    clearTimeout(t0);
+    clearInterval(t);
+  };
+}, [refresh]);
 
   // Refresh immédiat sur événements realtime pertinents.
   useRealtime(

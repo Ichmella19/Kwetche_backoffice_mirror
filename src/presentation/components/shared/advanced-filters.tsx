@@ -110,6 +110,7 @@ export function AdvancedFilters({
 }: AdvancedFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
   const [open, setOpen] = useState(!collapsible);
 
   // ── Lecture initiale URL → values ───────────────────────────────
@@ -147,7 +148,7 @@ export function AdvancedFilters({
     }
     return acc;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString(), fields]);
+}, [searchParamsString, fields]);
 
   // ── Écriture : on remplace l'URL et on notifie l'écran ──────────
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -163,6 +164,7 @@ export function AdvancedFilters({
       // Reset pagination à chaque changement.
       params.delete("page");
       const queryString = params.toString();
+
       const url = queryString
         ? `${window.location.pathname}?${queryString}`
         : window.location.pathname;
@@ -209,71 +211,7 @@ export function AdvancedFilters({
 
   // ── Chips actives ──────────────────────────────────────────────
   const activeChips: { label: string; onClear: () => void }[] = [];
-  for (const f of fields) {
-    switch (f.kind) {
-      case "text":
-      case "select":
-      case "boolean": {
-        const v = values[f.key];
-        if (typeof v === "string" && v) {
-          const lbl =
-            f.kind === "select"
-              ? f.options.find((o) => o.value === v)?.label ?? v
-              : f.kind === "boolean"
-                ? v === "1"
-                  ? (f.trueLabel ?? "Oui")
-                  : (f.falseLabel ?? "Non")
-                : v;
-          activeChips.push({
-            label: `${f.label} : ${lbl}`,
-            onClear: () => writeToUrl(f.key, undefined, true),
-          });
-        }
-        break;
-      }
-      case "multi": {
-        const v = values[f.key];
-        if (Array.isArray(v) && v.length) {
-          const labels = v.map(
-            (x) => f.options.find((o) => o.value === x)?.label ?? x,
-          );
-          activeChips.push({
-            label: `${f.label} : ${labels.join(", ")}`,
-            onClear: () => writeToUrl(f.key, undefined, true),
-          });
-        }
-        break;
-      }
-      case "date-range": {
-        const from = values[f.key + RANGE_FROM_SUFFIX];
-        const to = values[f.key + RANGE_TO_SUFFIX];
-        if (from || to) {
-          activeChips.push({
-            label: `${f.label} : ${from ?? "…"} → ${to ?? "…"}`,
-            onClear: () => {
-              writeToUrl(f.key + RANGE_FROM_SUFFIX, undefined);
-              writeToUrl(f.key + RANGE_TO_SUFFIX, undefined, true);
-            },
-          });
-        }
-        break;
-      }
-      case "number-range": {
-        const min = values[f.key + MIN_SUFFIX];
-        const max = values[f.key + MAX_SUFFIX];
-        if (min || max) {
-          activeChips.push({
-            label: `${f.label} : ${min ?? "…"} → ${max ?? "…"}${f.unit ? " " + f.unit : ""}`,
-            onClear: () => {
-              writeToUrl(f.key + MIN_SUFFIX, undefined);
-              writeToUrl(f.key + MAX_SUFFIX, undefined, true);
-            },
-          });
-        }
-        break;
-      }
-    }
-  }
+
   const hasActive = activeChips.length > 0;
 
   return (
