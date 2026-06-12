@@ -139,7 +139,7 @@ export function DossierList({ level, title, description }: DossierListProps) {
   const { data, isLoading, error, execute } =
     useAsync<KycDossierListResponse>(fetchDossiers);
 
-  // Refresh live à la soumission d'un document KYC.
+  // Refresh live à la soumission d'apos;un document KYC.
   useRealtime(["kyc.document.submitted", "kyc.level.changed"], () => {
     void execute();
   });

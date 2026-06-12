@@ -12,7 +12,7 @@ const VARIANT: Record<string, BadgeProps["variant"]> = {
   [Validation.NOT_UPLOADED]: "neutral",
 };
 
-/** Badge de statut d'un document KYC (state-machine `Validation`). */
+/** Badge de statut d'apos;un document KYC (state-machine `Validation`). */
 export function KycStatusBadge({ status }: { status: string }) {
   return (
     <Badge variant={VARIANT[status] ?? "neutral"}>{validationLabel(status)}</Badge>

@@ -90,8 +90,7 @@ const ACTION_META: Record<
   },
 };
 
-const GUARANTEE_ACTIONS = ["approve", "decline", "block"] as const;
-type GuaranteeAction = (typeof GUARANTEE_ACTIONS)[number];
+type GuaranteeAction = "approve" | "decline" | "block";
 
 const GUARANTEE_META: Record<
   GuaranteeAction,
@@ -368,7 +367,7 @@ function DossierStatusBanner({
           <p className="text-sm text-muted">
             {allClear
               ? "Tous les justificatifs sont traités et les données requises sont renseignées."
-              : "Traite les pièces ci-dessous pour décider de l'octroi du niveau."}
+              : "Traite les pièces ci-dessous pour décider de l'apos;octroi du niveau."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -713,7 +712,7 @@ function DocumentsBlock({
       <CardContent className="space-y-3 px-5 pb-5">
         {documents.length === 0 ? (
           <p className="text-sm text-muted">
-            Aucun justificatif n'a encore été soumis pour ce niveau.
+            Aucun justificatif n&apos;a encore été soumis pour ce niveau.
           </p>
         ) : (
           documents.map((doc) => (
@@ -750,7 +749,7 @@ function DocumentsBlock({
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Indiquez le motif à transmettre à l'utilisateur…"
+                placeholder="Indiquez le motif à transmettre à l'apos;utilisateur…"
               />
             </Field>
 
@@ -758,7 +757,7 @@ function DocumentsBlock({
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <Field
                   htmlFor="doc-expires"
-                  label="Valide jusqu'au (optionnel)"
+                  label="Valide jusqu'apos;au (optionnel)"
                 >
                   <Input
                     id="doc-expires"
@@ -792,7 +791,7 @@ function kycDocumentLabelFor(type: string): string {
     case KycDocumentType.INCOME_PROOF:
       return "Justificatif de revenus";
     case KycDocumentType.EMPLOYMENT_PROOF:
-      return "Attestation d'emploi";
+      return "Attestation d'apos;emploi";
     case KycDocumentType.BUSINESS_REGISTRATION:
       return "Extrait RCCM";
     case KycDocumentType.TAX_CERTIFICATE:
@@ -864,7 +863,7 @@ function GuaranteesBlock({
       <CardContent className="space-y-3 px-5 pb-5">
         {guarantees.length === 0 ? (
           <p className="text-sm text-muted">
-            L'utilisateur n'a déclaré aucune garantie.
+            L&apos;utilisateur n&apos;a déclaré aucune garantie.
           </p>
         ) : (
           guarantees.map((g) => (

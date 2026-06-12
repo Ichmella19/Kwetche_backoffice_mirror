@@ -55,7 +55,7 @@ interface NavGroup {
   kind: "group";
   label: string;
   icon: LucideIcon;
-  /** Toutes les sous-routes ; le groupe ouvre si l'une est active. */
+  /** Toutes les sous-routes ; le groupe ouvre si l'apos;une est active. */
   children: NavLeaf[];
   /** Cumul des badges des enfants. */
   badgeKeys?: (keyof Counters)[];
@@ -289,7 +289,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
   }, []);
 
+  // Polling : sync légitime depuis une source externe (badges du sidebar).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     const id = setInterval(() => void refresh(), REFRESH_MS);
     return () => clearInterval(id);
@@ -441,8 +443,10 @@ function SidebarGroup({
       (c.href !== "/" && pathname.startsWith(`${c.href}/`)),
   );
   const [open, setOpen] = useState(anyActive);
-  // Re-sync quand on navigue dans/hors du groupe.
+  // Re-sync quand on navigue dans/hors du groupe : ouvre le groupe si une de
+  // ses pages devient active. Synchro légitime depuis le pathname externe.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (anyActive) setOpen(true);
   }, [anyActive]);
 

@@ -2,8 +2,8 @@
 
 /**
  * Thème clair / sombre. La classe `.dark` est posée sur <html> avant
- * l'hydratation (script dans le layout) ; ce contexte synchronise ensuite
- * l'état React et la persistance.
+ * l'apos;hydratation (script dans le layout) ; ce contexte synchronise ensuite
+ * l'apos;état React et la persistance.
  */
 
 import {
@@ -34,9 +34,9 @@ const applyTheme = (theme: Theme) => {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
 
-  // Synchronise l'état React depuis le DOM (réglé par le script inline avant
-  // l'hydratation). On ne peut pas le faire dans l'initialiseur useState sans
-  // provoquer un écart d'hydratation, d'où la synchro en effet au montage.
+  // Synchronise l'apos;état React depuis le DOM (réglé par le script inline avant
+  // l'apos;hydratation). On ne peut pas le faire dans l'apos;initialiseur useState sans
+  // provoquer un écart d'apos;hydratation, d'apos;où la synchro en effet au montage.
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
     // eslint-disable-next-line react-hooks/set-state-in-effect

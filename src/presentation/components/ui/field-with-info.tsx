@@ -16,8 +16,8 @@ interface FieldWithInfoProps {
   label: string;
   htmlFor?: string;
   required?: boolean;
-  /** Texte affiché dans la bulle d'aide au survol / focus de l'icône info.
-   *  Optionnel : sans `info`, l'icône n'est pas rendue. */
+  /** Texte affiché dans la bulle d'apos;aide au survol / focus de l'apos;icône info.
+   *  Optionnel : sans `info`, l'apos;icône n'apos;est pas rendue. */
   info?: React.ReactNode;
   error?: string;
   className?: string;

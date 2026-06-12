@@ -12,7 +12,7 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-/** Enveloppe label + champ + message d'aide/erreur, espacement homogène. */
+/** Enveloppe label + champ + message d'apos;aide/erreur, espacement homogène. */
 export function Field({ label, htmlFor, required, error, hint, className, children }: FieldProps) {
   return (
     <div className={cn("space-y-1.5", className)}>

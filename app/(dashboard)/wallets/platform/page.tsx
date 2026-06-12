@@ -460,8 +460,8 @@ export default function PlatformWalletsPage() {
               />
             </div>
             <p className="rounded-md bg-warning/10 p-2 text-xs text-warning">
-              Action réservée au super_admin. L'écriture sera tracée dans
-              l'historique du compte de manière permanente.
+              Action réservée au super_admin. L&apos;écriture sera tracée dans
+              l&apos;historique du compte de manière permanente.
             </p>
           </div>
           <DialogFooter>

@@ -8,7 +8,7 @@ interface BrandProps {
 
 /**
  * Identité Kwetche : monogramme « K » en dégradé or sur fond indigo + wordmark.
- * Pas d'asset externe requis.
+ * Pas d'apos;asset externe requis.
  */
 export function Brand({ iconOnly, className }: BrandProps) {
   return (

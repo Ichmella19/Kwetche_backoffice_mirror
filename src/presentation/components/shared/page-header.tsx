@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 interface PageHeaderProps {
   title: string;
   description?: string;
-  /** Zone d'actions à droite (boutons, filtres). */
+  /** Zone d'apos;actions à droite (boutons, filtres). */
   actions?: ReactNode;
   className?: string;
 }

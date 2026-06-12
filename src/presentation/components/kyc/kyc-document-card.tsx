@@ -68,7 +68,7 @@ export function KycDocumentCard({
             )}
             {document.expires_at && (
               <span>
-                Valide jusqu'au{" "}
+                Valide jusqu&apos;au{" "}
                 {new Date(document.expires_at).toLocaleDateString("fr-FR")}
               </span>
             )}

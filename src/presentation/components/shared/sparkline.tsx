@@ -9,17 +9,17 @@ interface SparklineProps {
   width?: number;
   /** Hauteur en px. */
   height?: number;
-  /** Couleur de la ligne — accepte n'importe quelle valeur CSS color. */
+  /** Couleur de la ligne — accepte n'apos;importe quelle valeur CSS color. */
   color?: string;
   /** Si défini, dessine une zone remplie sous la ligne. */
   fill?: boolean;
-  /** Aria label pour l'accessibilité (sinon `hidden`). */
+  /** Aria label pour l'apos;accessibilité (sinon `hidden`). */
   label?: string;
 }
 
 /**
  * Sparkline ultra-léger en SVG inline. Pas de dépendance externe, pas
- * d'animation. Adapte la viewport et garde le ratio.
+ * d'apos;animation. Adapte la viewport et garde le ratio.
  */
 export function Sparkline({
   values,

@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils/cn";
  *   • callback `onApply(values)` pour relancer la requête côté page.
  *
  * Le composant **ne déclenche pas de fetch lui-même** : il met à jour
- * l'URL et appelle `onApply`. La page transforme `values` en query
+ * l'apos;URL et appelle `onApply`. La page transforme `values` en query
  * params côté service → repository → API.
  */
 
@@ -46,7 +46,7 @@ export type FilterField =
     }
   | {
       /**
-       * Multi-sélection : valeur stockée en CSV dans l'URL (`"a,b,c"`).
+       * Multi-sélection : valeur stockée en CSV dans l'apos;URL (`"a,b,c"`).
        * Rendue ici sous forme de chips toggleables.
        */
       kind: "multi";
@@ -113,6 +113,9 @@ export function AdvancedFilters({
   const [open, setOpen] = useState(!collapsible);
 
   // ── Lecture initiale URL → values ───────────────────────────────
+  // Clé stable pour les deps du useMemo (la règle react-hooks/use-memo
+  // n'accepte pas d'expression composée dans le tableau de dépendances).
+  const searchParamsString = searchParams.toString();
   const values = useMemo<FilterValues>(() => {
     const acc: FilterValues = {};
     for (const f of fields) {
@@ -147,9 +150,9 @@ export function AdvancedFilters({
     }
     return acc;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString(), fields]);
+  }, [searchParamsString, fields]);
 
-  // ── Écriture : on remplace l'URL et on notifie l'écran ──────────
+  // ── Écriture : on remplace l'apos;URL et on notifie l'apos;écran ──────────
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const writeToUrl = useCallback(
@@ -208,72 +211,82 @@ export function AdvancedFilters({
   };
 
   // ── Chips actives ──────────────────────────────────────────────
-  const activeChips: { label: string; onClear: () => void }[] = [];
-  for (const f of fields) {
-    switch (f.kind) {
-      case "text":
-      case "select":
-      case "boolean": {
-        const v = values[f.key];
-        if (typeof v === "string" && v) {
-          const lbl =
-            f.kind === "select"
-              ? f.options.find((o) => o.value === v)?.label ?? v
-              : f.kind === "boolean"
-                ? v === "1"
-                  ? (f.trueLabel ?? "Oui")
-                  : (f.falseLabel ?? "Non")
-                : v;
-          activeChips.push({
-            label: `${f.label} : ${lbl}`,
-            onClear: () => writeToUrl(f.key, undefined, true),
-          });
+  // On reconstruit dans un useMemo : la règle `react-hooks/refs` flagge les
+  // closures (capturant `writeToUrl` qui lit un `useRef`) construites pendant
+  // le rendu top-level. Dans un useMemo, c'est accepté.
+  const activeChips = useMemo<{ label: string; onClear: () => void }[]>(() => {
+    const chips: { label: string; onClear: () => void }[] = [];
+    for (const f of fields) {
+      switch (f.kind) {
+        case "text":
+        case "select":
+        case "boolean": {
+          const v = values[f.key];
+          if (typeof v === "string" && v) {
+            const lbl =
+              f.kind === "select"
+                ? f.options.find((o) => o.value === v)?.label ?? v
+                : f.kind === "boolean"
+                  ? v === "1"
+                    ? (f.trueLabel ?? "Oui")
+                    : (f.falseLabel ?? "Non")
+                  : v;
+            // eslint-disable-next-line react-hooks/refs -- writeToUrl est un useCallback stable
+            chips.push({
+              label: `${f.label} : ${lbl}`,
+              onClear: () => writeToUrl(f.key, undefined, true),
+            });
+          }
+          break;
         }
-        break;
-      }
-      case "multi": {
-        const v = values[f.key];
-        if (Array.isArray(v) && v.length) {
-          const labels = v.map(
-            (x) => f.options.find((o) => o.value === x)?.label ?? x,
-          );
-          activeChips.push({
-            label: `${f.label} : ${labels.join(", ")}`,
-            onClear: () => writeToUrl(f.key, undefined, true),
-          });
+        case "multi": {
+          const v = values[f.key];
+          if (Array.isArray(v) && v.length) {
+            const labels = v.map(
+              (x) => f.options.find((o) => o.value === x)?.label ?? x,
+            );
+            // eslint-disable-next-line react-hooks/refs -- writeToUrl est un useCallback stable
+            chips.push({
+              label: `${f.label} : ${labels.join(", ")}`,
+              onClear: () => writeToUrl(f.key, undefined, true),
+            });
+          }
+          break;
         }
-        break;
-      }
-      case "date-range": {
-        const from = values[f.key + RANGE_FROM_SUFFIX];
-        const to = values[f.key + RANGE_TO_SUFFIX];
-        if (from || to) {
-          activeChips.push({
-            label: `${f.label} : ${from ?? "…"} → ${to ?? "…"}`,
-            onClear: () => {
-              writeToUrl(f.key + RANGE_FROM_SUFFIX, undefined);
-              writeToUrl(f.key + RANGE_TO_SUFFIX, undefined, true);
-            },
-          });
+        case "date-range": {
+          const from = values[f.key + RANGE_FROM_SUFFIX];
+          const to = values[f.key + RANGE_TO_SUFFIX];
+          if (from || to) {
+            // eslint-disable-next-line react-hooks/refs -- writeToUrl est un useCallback stable
+            chips.push({
+              label: `${f.label} : ${from ?? "…"} → ${to ?? "…"}`,
+              onClear: () => {
+                writeToUrl(f.key + RANGE_FROM_SUFFIX, undefined);
+                writeToUrl(f.key + RANGE_TO_SUFFIX, undefined, true);
+              },
+            });
+          }
+          break;
         }
-        break;
-      }
-      case "number-range": {
-        const min = values[f.key + MIN_SUFFIX];
-        const max = values[f.key + MAX_SUFFIX];
-        if (min || max) {
-          activeChips.push({
-            label: `${f.label} : ${min ?? "…"} → ${max ?? "…"}${f.unit ? " " + f.unit : ""}`,
-            onClear: () => {
-              writeToUrl(f.key + MIN_SUFFIX, undefined);
-              writeToUrl(f.key + MAX_SUFFIX, undefined, true);
-            },
-          });
+        case "number-range": {
+          const min = values[f.key + MIN_SUFFIX];
+          const max = values[f.key + MAX_SUFFIX];
+          if (min || max) {
+            // eslint-disable-next-line react-hooks/refs -- writeToUrl est un useCallback stable
+            chips.push({
+              label: `${f.label} : ${min ?? "…"} → ${max ?? "…"}${f.unit ? " " + f.unit : ""}`,
+              onClear: () => {
+                writeToUrl(f.key + MIN_SUFFIX, undefined);
+                writeToUrl(f.key + MAX_SUFFIX, undefined, true);
+              },
+            });
+          }
+          break;
         }
-        break;
       }
     }
-  }
+    return chips;
+  }, [fields, values, writeToUrl]);
   const hasActive = activeChips.length > 0;
 
   return (
@@ -346,7 +359,7 @@ export function AdvancedFilters({
   );
 }
 
-// ── Rendu d'un champ ───────────────────────────────────────────────────
+// ── Rendu d'apos;un champ ───────────────────────────────────────────────────
 
 function FieldRenderer({
   field,

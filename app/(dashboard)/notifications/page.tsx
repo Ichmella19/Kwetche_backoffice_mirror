@@ -51,10 +51,13 @@ export default function NotificationsPage() {
   ]);
   const [sending, setSending] = useState(false);
 
-  // Recherche debouncée d'utilisateurs.
+  // Recherche debouncée d'utilisateurs. setResults/setSearching ici
+  // synchronisent l'état avec la query externe (debounce sur input) — usage
+  // légitime de setState dans un effect.
   useEffect(() => {
     const q = search.trim();
     if (q.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([]);
       return;
     }

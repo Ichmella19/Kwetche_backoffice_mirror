@@ -11,7 +11,7 @@ export interface ErrorStateProps {
   className?: string;
 }
 
-/** Bloc d'erreur réutilisable avec action « Réessayer ». */
+/** Bloc d'apos;erreur réutilisable avec action « Réessayer ». */
 export function ErrorState({
   title = "Une erreur est survenue",
   message,

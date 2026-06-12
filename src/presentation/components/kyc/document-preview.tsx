@@ -22,8 +22,8 @@ interface DocumentPreviewProps {
 const isPdf = (url: string) => /\.pdf(\?|$)/i.test(url);
 
 /**
- * Vignette cliquable d'un document KYC. Ouvre une visionneuse plein écran
- * (image agrandie ou PDF embarqué) avec lien d'ouverture externe.
+ * Vignette cliquable d'apos;un document KYC. Ouvre une visionneuse plein écran
+ * (image agrandie ou PDF embarqué) avec lien d'apos;ouverture externe.
  */
 export function DocumentPreview({ fileUrl, label, className }: DocumentPreviewProps) {
   const [open, setOpen] = useState(false);

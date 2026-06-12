@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Contexte d'authentification : source de vérité de l'utilisateur connecté
+ * Contexte d'apos;authentification : source de vérité de l'apos;utilisateur connecté
  * pour toute la présentation. Branche aussi la réaction aux 401 (le client
- * HTTP appelle ce handler quand le jeton n'est plus valide).
+ * HTTP appelle ce handler quand le jeton n'apos;est plus valide).
  */
 
 import {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Bootstrap : restaure depuis le cache puis revalide via /user/me.
   useEffect(() => {
     let active = true;
-    // Restaure l'utilisateur depuis le cache local (indisponible au SSR), puis
+    // Restaure l'apos;utilisateur depuis le cache local (indisponible au SSR), puis
     // revalide via /user/me ci-dessous — synchro légitime au montage.
     const cached = authService.getCurrentUser();
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) setUser(fresh);
       })
       .catch(() => {
-        /* le handler 401 s'occupe de la déconnexion si besoin */
+        /* le handler 401 s'apos;occupe de la déconnexion si besoin */
       })
       .finally(() => {
         if (active) setIsLoading(false);

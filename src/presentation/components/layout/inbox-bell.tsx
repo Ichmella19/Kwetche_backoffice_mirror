@@ -28,7 +28,7 @@ function relativeAge(iso: string | null): string {
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return "—";
   const min = Math.floor((Date.now() - t) / 60_000);
-  if (min < 1) return "à l'instant";
+  if (min < 1) return "à l'apos;instant";
   if (min < 60) return `${min} min`;
   const h = Math.floor(min / 60);
   if (h < 24) return `${h} h`;
@@ -60,12 +60,16 @@ export function InboxBell() {
       const fresh = await dashboardService.getInbox(20);
       setData(fresh);
     } catch {
-      // ignore — gardé silencieux : si l'agent n'a pas la permission ou
-      // si l'API est temporairement KO, on n'affiche juste rien.
+      // ignore — gardé silencieux : si l'apos;agent n'apos;a pas la permission ou
+      // si l'apos;API est temporairement KO, on n'apos;affiche juste rien.
     }
   }, []);
 
+  // Polling : sync légitime depuis une source externe (l'API). Le linter
+  // (react-hooks/set-state-in-effect) ne distingue pas ce cas — on désactive
+  // explicitement.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refresh();
     const t = setInterval(refresh, POLL_MS);
     return () => clearInterval(t);
@@ -86,9 +90,11 @@ export function InboxBell() {
     },
   );
 
-  const items = data?.items ?? [];
   const total = data?.total ?? 0;
-  const preview = useMemo(() => items.slice(0, PREVIEW_LIMIT), [items]);
+  const preview = useMemo(
+    () => (data?.items ?? []).slice(0, PREVIEW_LIMIT),
+    [data?.items],
+  );
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
