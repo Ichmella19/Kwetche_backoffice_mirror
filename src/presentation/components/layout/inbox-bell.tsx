@@ -95,9 +95,13 @@ export function InboxBell() {
     },
   );
 
-  const items = data?.items ?? [];
   const total = data?.total ?? 0;
-  const preview = useMemo(() => items.slice(0, PREVIEW_LIMIT), [items]);
+  // `data?.items ?? []` créerait un nouveau tableau à chaque render → on
+  // inline la résolution dans le useMemo pour ne dépendre que de `data`.
+  const preview = useMemo(
+    () => (data?.items ?? []).slice(0, PREVIEW_LIMIT),
+    [data],
+  );
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

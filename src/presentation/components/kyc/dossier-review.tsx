@@ -90,8 +90,7 @@ const ACTION_META: Record<
   },
 };
 
-const GUARANTEE_ACTIONS = ["approve", "decline", "block"] as const;
-type GuaranteeAction = (typeof GUARANTEE_ACTIONS)[number];
+type GuaranteeAction = "approve" | "decline" | "block";
 
 const GUARANTEE_META: Record<
   GuaranteeAction,
