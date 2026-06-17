@@ -428,11 +428,13 @@ export default function UsersPage() {
                 const isSuperAdmin = item.role === UserRole.SUPER_ADMIN;
                 return (
                   <TableRow key={item.id}>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <p className="font-medium">
                         {fullName(item.first_name, item.last_name)}
                       </p>
-                      <p className="text-xs text-muted">{item.id}</p>
+                      <p className="text-xs text-muted font-mono">
+                        {item.id}
+                      </p>
                     </TableCell>
                     <TableCell>
                       <p>{formatPhone(item.phone, item.country_code)}</p>
@@ -446,53 +448,55 @@ export default function UsersPage() {
                     <TableCell>
                       <StatusBadges user={item} />
                     </TableCell>
-                    <TableCell>{formatDate(item.created_at)}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {formatDate(item.created_at)}
+                    </TableCell>
                     <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button asChild variant="ghost" size="sm">
+                      <div className="flex justify-end gap-1">
+                        <Button asChild variant="ghost" size="icon" title="Détail">
                           <Link href={`/users/${item.id}`}>
-                            <Eye />
-                            Détail
+                            <Eye className="size-4" />
                           </Link>
                         </Button>
                         <Button
-                          variant="outline"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
+                          title="Modifier"
                           disabled={!canWrite || (isSuperAdmin && !isSelf)}
                           onClick={() => openEdit(item)}
                         >
-                          <UserCog />
-                          Modifier
+                          <UserCog className="size-4" />
                         </Button>
                         {item.is_desactivate ? (
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
+                            title="Réactiver"
                             disabled={!canDisable || isSuperAdmin}
                             onClick={() => openDecision(item, "enable")}
                           >
-                            <RotateCcw />
-                            Réactiver
+                            <RotateCcw className="size-4" />
                           </Button>
                         ) : (
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
+                            title="Désactiver"
                             disabled={!canDisable || isSuperAdmin}
                             onClick={() => openDecision(item, "disable")}
                           >
-                            <ShieldOff />
-                            Désactiver
+                            <ShieldOff className="size-4" />
                           </Button>
                         )}
                         <Button
-                          variant="danger"
-                          size="sm"
+                          variant="ghost"
+                          size="icon"
+                          title="Supprimer"
+                          className="text-danger hover:text-danger hover:bg-danger/10"
                           disabled={!canDelete || isSelf || isSuperAdmin}
                           onClick={() => openDecision(item, "delete")}
                         >
-                          <Trash2 />
-                          Supprimer
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -519,7 +523,7 @@ export default function UsersPage() {
         isLoading={busy}
         onConfirm={submitForm}
       >
-        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+        <div className="max-h-[70vh] space-y-5 overflow-y-auto px-4 py-2">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Prénom" required>
               <Input

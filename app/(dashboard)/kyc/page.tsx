@@ -358,24 +358,26 @@ export default function KycPage() {
                           label="CIP — verso"
                         />
                       </div>
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
                         <Button
                           variant="accent"
                           size="sm"
+                          className="w-full sm:w-auto"
                           disabled={!canReview}
                           onClick={() => openAction(item, "approve", "cip")}
                         >
-                          <CheckCircle2 />
-                          Approuver CIP
+                          <CheckCircle2 className="size-4" />
+                          Approuver
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           disabled={!canReview}
                           onClick={() => openAction(item, "decline", "cip")}
                         >
-                          <XCircle />
-                          Refuser CIP
+                          <XCircle className="size-4" />
+                          Refuser
                         </Button>
                       </div>
                     </div>
@@ -388,33 +390,36 @@ export default function KycPage() {
                         fileUrl={item.selfie_photo}
                         label="Selfie"
                       />
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
                         <Button
                           variant="accent"
                           size="sm"
+                          className="w-full sm:w-auto"
                           disabled={!canReview}
                           onClick={() => openAction(item, "approve", "selfie")}
                         >
-                          <CheckCircle2 />
-                          Approuver selfie
+                          <CheckCircle2 className="size-4" />
+                          Approuver
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="w-full sm:w-auto"
                           disabled={!canReview}
                           onClick={() => openAction(item, "decline", "selfie")}
                         >
-                          <XCircle />
-                          Refuser selfie
+                          <XCircle className="size-4" />
+                          Refuser
                         </Button>
                       </div>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="flex-wrap justify-end">
+                <CardFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="w-full sm:w-auto"
                     disabled={!canReview}
                     onClick={() => {
                       setRequestFor(item);
@@ -423,25 +428,27 @@ export default function KycPage() {
                       setRequestTargetLevel("1");
                     }}
                   >
-                    <FileImage />
+                    <FileImage className="size-4" />
                     Demander une photo
                   </Button>
                   <Button
                     variant="accent"
                     size="sm"
+                    className="w-full sm:w-auto"
                     disabled={!canReview}
                     onClick={() => openAction(item, "approve", "identity")}
                   >
-                    <CheckCircle2 />
+                    <CheckCircle2 className="size-4" />
                     Tout approuver
                   </Button>
                   <Button
                     variant="danger"
                     size="sm"
+                    className="w-full sm:w-auto"
                     disabled={!canReview}
                     onClick={() => openAction(item, "block", "identity")}
                   >
-                    <Ban />
+                    <Ban className="size-4" />
                     Tout bloquer
                   </Button>
                 </CardFooter>

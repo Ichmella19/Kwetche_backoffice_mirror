@@ -75,33 +75,35 @@ export function KycDocumentCard({
           </div>
         )}
 
-        <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        <div className="mt-auto flex flex-col sm:flex-row gap-2 pt-1">
           <Button
             variant="accent"
             size="sm"
+            className="w-full sm:w-auto"
             disabled={!canReview || busy}
             onClick={() => onReview(document, "approve")}
           >
-            <Check />
+            <Check className="size-4" />
             Approuver
           </Button>
           <Button
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto text-danger hover:bg-danger-soft"
             disabled={!canReview || busy}
             onClick={() => onReview(document, "decline")}
-            className="text-danger hover:bg-danger-soft"
           >
-            <X />
+            <X className="size-4" />
             Refuser
           </Button>
           <Button
             variant="outline"
             size="sm"
+            className="w-full sm:w-auto"
             disabled={!canReview || busy}
             onClick={() => onReview(document, "block")}
           >
-            <Ban />
+            <Ban className="size-4" />
             Bloquer
           </Button>
         </div>

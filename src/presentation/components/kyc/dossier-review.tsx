@@ -965,9 +965,9 @@ function GuaranteeCard({
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4 flex flex-col sm:flex-row gap-2">
         {guarantee.document_url ? (
-          <Button asChild size="sm" variant="ghost">
+          <Button asChild size="sm" variant="ghost" className="w-full sm:w-auto">
             <a
               href={guarantee.document_url}
               target="_blank"
@@ -982,6 +982,7 @@ function GuaranteeCard({
             <Button
               size="sm"
               variant="accent"
+              className="w-full sm:w-auto"
               onClick={() => onAct("approve")}
             >
               Approuver
@@ -989,6 +990,7 @@ function GuaranteeCard({
             <Button
               size="sm"
               variant="danger"
+              className="w-full sm:w-auto"
               onClick={() => onAct("decline")}
             >
               Refuser
@@ -996,6 +998,7 @@ function GuaranteeCard({
             <Button
               size="sm"
               variant="ghost"
+              className="w-full sm:w-auto"
               onClick={() => onAct("block")}
             >
               Bloquer
