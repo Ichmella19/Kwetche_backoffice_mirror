@@ -1,0 +1,113 @@
+"use client";
+
+import { Ban, Check, Clock, Fingerprint, X } from "lucide-react";
+import { Card } from "@/presentation/components/ui/card";
+import { Button } from "@/presentation/components/ui/button";
+import { DocumentPreview } from "./document-preview";
+import { KycLevelBadge } from "./kyc-level-badge";
+import { KycStatusBadge } from "./kyc-status-badge";
+import { kycDocumentLabel } from "@/lib/constants";
+import { formatRelativeTime } from "@/lib/utils/formatters";
+import type { KycDocument } from "@/lib/types";
+
+export type KycDocumentAction = "approve" | "decline" | "block";
+
+interface KycDocumentCardProps {
+  document: KycDocument;
+  canReview: boolean;
+  busy?: boolean;
+  onReview: (document: KycDocument, action: KycDocumentAction) => void;
+}
+
+export function KycDocumentCard({
+  document,
+  canReview,
+  busy,
+  onReview,
+}: KycDocumentCardProps) {
+  const label = kycDocumentLabel(document.document_type);
+
+  return (
+    <Card className="flex flex-col overflow-hidden">
+      <div className="p-3">
+        <DocumentPreview fileUrl={document.file_url} label={label} />
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 px-4 pb-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">{label}</p>
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-muted">
+              <Clock className="size-3.5" />
+              {formatRelativeTime(document.submitted_at)}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <KycLevelBadge level={document.target_level} />
+            <KycStatusBadge status={document.validation} />
+          </div>
+        </div>
+
+        <p className="flex items-center gap-1.5 text-xs text-muted">
+          <Fingerprint className="size-3.5 shrink-0" />
+          <span className="truncate font-mono">{document.user_id}</span>
+        </p>
+
+        {document.review_reason && (
+          <p className="rounded-md bg-danger-soft px-2 py-1 text-xs text-danger">
+            Motif : {document.review_reason}
+          </p>
+        )}
+
+        {(document.expires_at || document.document_reference) && (
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted">
+            {document.document_reference && (
+              <span>
+                Réf : <span className="font-mono">{document.document_reference}</span>
+              </span>
+            )}
+            {document.expires_at && (
+              <span>
+                Valide jusqu&apos;au{" "}
+                {new Date(document.expires_at).toLocaleDateString("fr-FR")}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex flex-col sm:flex-row gap-2 pt-1">
+          <Button
+            variant="accent"
+            size="sm"
+            className="w-full sm:w-auto"
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "approve")}
+          >
+            <Check className="size-4" />
+            Approuver
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto text-danger hover:bg-danger-soft"
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "decline")}
+          >
+            <X className="size-4" />
+            Refuser
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            disabled={!canReview || busy}
+            onClick={() => onReview(document, "block")}
+          >
+            <Ban className="size-4" />
+            Bloquer
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}

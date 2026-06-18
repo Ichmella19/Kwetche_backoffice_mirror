@@ -1,0 +1,30 @@
+import { Grant } from "@/lib/enums";
+
+/** Libellé court d'un grant, pour l'affichage. */
+export const GRANT_LABELS: Record<string, string> = {
+  [Grant.USER_READ]: "Consulter les utilisateurs",
+  [Grant.USER_WRITE]: "Modifier les utilisateurs",
+  [Grant.USER_DISABLE]: "Désactiver des comptes",
+  [Grant.USER_DELETE]: "Supprimer des comptes",
+  [Grant.KYC_REVIEW]: "Examiner les dossiers KYC",
+  [Grant.KYC_APPROVE]: "Approuver les documents KYC",
+  [Grant.KYC_REJECT]: "Rejeter les documents KYC",
+  [Grant.TONTINE_READ]: "Consulter les tontines",
+  [Grant.TONTINE_WRITE]: "Gérer les tontines",
+  [Grant.TONTINE_CANCEL]: "Annuler des tontines",
+  [Grant.WALLET_READ]: "Consulter les wallets",
+  [Grant.WALLET_ADJUST]: "Ajuster les wallets",
+  [Grant.LOAN_READ]: "Consulter les prêts",
+  [Grant.LOAN_APPROVE]: "Approuver les prêts",
+  [Grant.LOAN_REJECT]: "Rejeter les prêts",
+  [Grant.RECOUVREMENT_READ]: "Consulter le recouvrement",
+  [Grant.RECOUVREMENT_WORK]: "Traiter les dossiers de recouvrement",
+  [Grant.RECOUVREMENT_RESOLVE]: "Clôturer les dossiers de recouvrement",
+  [Grant.NOTIFICATION_SEND]: "Envoyer des notifications",
+  [Grant.SUPPORT_READ]: "Consulter le support",
+  [Grant.SUPPORT_TICKET]: "Gérer les tickets",
+  [Grant.SUPPORT_WRITE]: "Répondre au support",
+  [Grant.SETTINGS_READ]: "Consulter les paramètres",
+  [Grant.SETTINGS_WRITE]: "Modifier les paramètres",
+  [Grant.AUDIT_READ]: "Accès aux journaux d'audit",
+};
