@@ -100,6 +100,14 @@ function StatusBadge({ status }: { status: string }) {
   return <Badge variant={variant}>{validationLabel(status)}</Badge>;
 }
 
+function isPendingIdentityValidation(status: string): boolean {
+  return (
+    status === Validation.UPLOADED_AND_WAITING_FOR_APPROVAL ||
+    status === Validation.REUPLOADED_AND_WAITING_FOR_APPROVAL ||
+    status === Validation.APPROVED_AND_REUPLOADED
+  );
+}
+
 function StatusTabs({
   value,
   onChange,
@@ -311,149 +319,163 @@ export default function KycPage() {
       ) : (
         <>
           <div className="grid gap-4 xl:grid-cols-2">
-            {data.items.map((item) => (
-              <Card key={item.user_id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <CardTitle>{fullName(item.first_name, item.last_name)}</CardTitle>
-                      <p className="mt-1 text-sm text-muted">
-                        {item.country_code}
-                        {item.phone} · NPI {item.npi_number ?? "non renseigné"}
-                      </p>
-                    </div>
-                    <Badge variant="info">Niveau {item.kyc_level}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {(item.identity_expires_at ||
-                    item.identity_review_reason) && (
-                    <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted">
-                      {item.identity_expires_at && (
-                        <p>
-                          Expire le{" "}
-                          {new Date(
-                            item.identity_expires_at,
-                          ).toLocaleDateString("fr-FR")}
+            {data.items.map((item) => {
+              const cipPending = isPendingIdentityValidation(item.cip_validation);
+              const selfiePending = isPendingIdentityValidation(item.selfie_validation);
+              const identityFullyApproved =
+                item.cip_validation === Validation.APPROVED &&
+                item.selfie_validation === Validation.APPROVED;
+
+              return (
+                <Card key={item.user_id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <CardTitle>{fullName(item.first_name, item.last_name)}</CardTitle>
+                        <p className="mt-1 text-sm text-muted">
+                          {item.country_code}
+                          {item.phone} · NPI {item.npi_number ?? "non renseigné"}
                         </p>
-                      )}
-                      {item.identity_review_reason && (
-                        <p>Motif : {item.identity_review_reason}</p>
-                      )}
-                    </div>
-                  )}
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">Carte CIP</p>
-                        <StatusBadge status={item.cip_validation} />
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <Badge variant="info">Niveau {item.kyc_level}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {(item.identity_expires_at ||
+                      item.identity_review_reason) && (
+                      <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted">
+                        {item.identity_expires_at && (
+                          <p>
+                            Expire le{" "}
+                            {new Date(
+                              item.identity_expires_at,
+                            ).toLocaleDateString("fr-FR")}
+                          </p>
+                        )}
+                        {item.identity_review_reason && (
+                          <p>Motif : {item.identity_review_reason}</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">Carte CIP</p>
+                          <StatusBadge status={item.cip_validation} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <DocumentPreview
+                            fileUrl={item.cip_photo}
+                            label="CIP — recto"
+                          />
+                          <DocumentPreview
+                            fileUrl={item.cip_back_photo}
+                            label="CIP — verso"
+                          />
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
+                          {cipPending ? (
+                            <Button
+                              variant="accent"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              disabled={!canReview}
+                              onClick={() => openAction(item, "approve", "cip")}
+                            >
+                              <CheckCircle2 className="size-4" />
+                              Approuver
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto"
+                            disabled={!canReview}
+                            onClick={() => openAction(item, "decline", "cip")}
+                          >
+                            <XCircle className="size-4" />
+                            Refuser
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium">Selfie</p>
+                          <StatusBadge status={item.selfie_validation} />
+                        </div>
                         <DocumentPreview
-                          fileUrl={item.cip_photo}
-                          label="CIP — recto"
+                          fileUrl={item.selfie_photo}
+                          label="Selfie"
                         />
-                        <DocumentPreview
-                          fileUrl={item.cip_back_photo}
-                          label="CIP — verso"
-                        />
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
-                        <Button
-                          variant="accent"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          disabled={!canReview}
-                          onClick={() => openAction(item, "approve", "cip")}
-                        >
-                          <CheckCircle2 className="size-4" />
-                          Approuver
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          disabled={!canReview}
-                          onClick={() => openAction(item, "decline", "cip")}
-                        >
-                          <XCircle className="size-4" />
-                          Refuser
-                        </Button>
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
+                          {selfiePending ? (
+                            <Button
+                              variant="accent"
+                              size="sm"
+                              className="w-full sm:w-auto"
+                              disabled={!canReview}
+                              onClick={() => openAction(item, "approve", "selfie")}
+                            >
+                              <CheckCircle2 className="size-4" />
+                              Approuver
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto"
+                            disabled={!canReview}
+                            onClick={() => openAction(item, "decline", "selfie")}
+                          >
+                            <XCircle className="size-4" />
+                            Refuser
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium">Selfie</p>
-                        <StatusBadge status={item.selfie_validation} />
-                      </div>
-                      <DocumentPreview
-                        fileUrl={item.selfie_photo}
-                        label="Selfie"
-                      />
-                      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2">
-                        <Button
-                          variant="accent"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          disabled={!canReview}
-                          onClick={() => openAction(item, "approve", "selfie")}
-                        >
-                          <CheckCircle2 className="size-4" />
-                          Approuver
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full sm:w-auto"
-                          disabled={!canReview}
-                          onClick={() => openAction(item, "decline", "selfie")}
-                        >
-                          <XCircle className="size-4" />
-                          Refuser
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={!canReview}
-                    onClick={() => {
-                      setRequestFor(item);
-                      setRequestLabel("");
-                      setRequestNote("");
-                      setRequestTargetLevel("1");
-                    }}
-                  >
-                    <FileImage className="size-4" />
-                    Demander une photo
-                  </Button>
-                  <Button
-                    variant="accent"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={!canReview}
-                    onClick={() => openAction(item, "approve", "identity")}
-                  >
-                    <CheckCircle2 className="size-4" />
-                    Tout approuver
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={!canReview}
-                    onClick={() => openAction(item, "block", "identity")}
-                  >
-                    <Ban className="size-4" />
-                    Tout bloquer
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                  </CardContent>
+                  <CardFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      disabled={!canReview}
+                      onClick={() => {
+                        setRequestFor(item);
+                        setRequestLabel("");
+                        setRequestNote("");
+                        setRequestTargetLevel("1");
+                      }}
+                    >
+                      <FileImage className="size-4" />
+                      Demander une photo
+                    </Button>
+                    {!identityFullyApproved ? (
+                      <Button
+                        variant="accent"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        disabled={!canReview}
+                        onClick={() => openAction(item, "approve", "identity")}
+                      >
+                        <CheckCircle2 className="size-4" />
+                        Tout approuver
+                      </Button>
+                    ) : null}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      disabled={!canReview}
+                      onClick={() => openAction(item, "block", "identity")}
+                    >
+                      <Ban className="size-4" />
+                      Tout bloquer
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
           <Pagination
             page={page}

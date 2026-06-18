@@ -374,6 +374,9 @@ function SidebarSection({
               pathname={pathname}
               counters={counters}
               onNavigate={onNavigate}
+              siblingHrefs={section.items.flatMap((child) =>
+                child.kind === "leaf" ? [child.href] : child.children.map((c) => c.href),
+              )}
             />
           ) : (
             <SidebarGroup
@@ -382,6 +385,9 @@ function SidebarSection({
               pathname={pathname}
               counters={counters}
               onNavigate={onNavigate}
+              siblingHrefs={section.items.flatMap((child) =>
+                child.kind === "leaf" ? [child.href] : child.children.map((c) => c.href),
+              )}
             />
           ),
         )}
@@ -396,16 +402,25 @@ function SidebarLeaf({
   counters,
   onNavigate,
   inset = false,
+  siblingHrefs,
 }: {
   item: NavLeaf;
   pathname: string;
   counters: Counters;
   onNavigate?: () => void;
   inset?: boolean;
+  siblingHrefs: string[];
 }) {
   const active =
     pathname === item.href ||
-    (item.href !== "/" && pathname.startsWith(`${item.href}/`));
+    (item.href !== "/" &&
+      pathname.startsWith(`${item.href}/`) &&
+      !siblingHrefs.some(
+        (href) =>
+          href !== item.href &&
+          href.length > item.href.length &&
+          (pathname === href || pathname.startsWith(`${href}/`)),
+      ));
   const Icon = item.icon;
   const badge = item.badgeKey ? counters[item.badgeKey] : 0;
   return (
@@ -434,11 +449,13 @@ function SidebarGroup({
   pathname,
   counters,
   onNavigate,
+  siblingHrefs,
 }: {
   group: NavGroup;
   pathname: string;
   counters: Counters;
   onNavigate?: () => void;
+  siblingHrefs: string[];
 }) {
   const anyActive = group.children.some(
     (c) =>
@@ -460,7 +477,7 @@ const open = anyActive || manualOpen;  // Re-sync quand on navigue dans/hors du 
     <div>
       <button
         type="button"
-      onClick={() => setManualOpen((v) => !v)}
+        onClick={() => setManualOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
           "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -489,6 +506,7 @@ const open = anyActive || manualOpen;  // Re-sync quand on navigue dans/hors du 
               counters={counters}
               onNavigate={onNavigate}
               inset
+              siblingHrefs={siblingHrefs}
             />
           ))}
         </div>
